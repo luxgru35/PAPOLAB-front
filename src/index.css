@@ -309,6 +309,86 @@ body {
   position: relative;
   z-index: 1;
 }
+.auth-links {
+  margin-top: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.auth-links__text {
+  color: var(--text-dim);
+}
+
+.auth-links__sep {
+  color: var(--text-dim);
+}
+
+.auth-link {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.auth-link:hover {
+  color: #d4893a;
+  text-decoration: underline;
+}
+
+/* ── Forgot password page ───────────────────────── */
+.forgot-icon {
+  width: 64px;
+  height: 64px;
+  background: var(--surface-3);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
+  margin-bottom: 24px;
+}
+
+.forgot-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 16px 18px;
+  margin: 24px 0 28px;
+}
+
+.forgot-card__icon {
+  color: var(--accent);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.forgot-card__title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.forgot-card__desc {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+/* ── Success toast (green variant) ─────────────── */
+.toast--success {
+  background: rgba(61, 214, 140, 0.1);
+  border-color: rgba(61, 214, 140, 0.3);
+  color: var(--success);
+}
+
 
 /* ── Responsive ─────────────────────────────────── */
 @media (max-width: 640px) {
