@@ -3,25 +3,34 @@ import { useForm } from 'react-hook-form';
 import { useNavigate, Link } from 'react-router-dom';
 import { Input, PasswordInput } from '../components/ui/Input';
 import { useAuthStore } from '../store/authStore';
-import type { LoginRequest } from '../types/auth';
+import type { RegisterRequest } from '../types/auth';
 
-export default function LoginPage() {
+export default function RegisterPage() {
   const navigate = useNavigate();
-  const { login, isLoading, isAuthenticated, error, clearError } = useAuthStore();
+  const { register: registerUser, isLoading, isAuthenticated, error, clearError } = useAuthStore();
 
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
-  } = useForm<LoginRequest>({ mode: 'onSubmit' });
+  } = useForm<RegisterRequest>({ mode: 'onSubmit' });
 
+  // Already logged in → dashboard
   useEffect(() => {
     if (isAuthenticated) navigate('/dashboard', { replace: true });
   }, [isAuthenticated, navigate]);
 
-  const onSubmit = async (data: LoginRequest) => {
+  const onSubmit = async (data: RegisterRequest) => {
     clearError();
-    await login(data);
+    const result = await registerUser(data);
+    if (result?.success) {
+      // Backend returns user_id, not token — redirect to login
+      navigate('/login', {
+        replace: true,
+        state: { registered: true, email: data.email },
+      });
+    }
   };
 
   return (
@@ -35,8 +44,8 @@ export default function LoginPage() {
             СтройКалькулятор
           </a>
 
-          <h1 className="auth-title">Добро пожаловать</h1>
-          <p className="auth-subtitle">Войдите в систему, чтобы продолжить</p>
+          <h1 className="auth-title">Создать аккаунт</h1>
+          <p className="auth-subtitle">Заполните данные для регистрации</p>
 
           {error && (
             <div className="toast toast--visible" role="alert">
@@ -62,10 +71,25 @@ export default function LoginPage() {
 
             <PasswordInput
               label="Пароль"
-              placeholder="Введите пароль"
-              autoComplete="current-password"
+              placeholder="Минимум 6 символов"
+              autoComplete="new-password"
               error={errors.password?.message}
-              {...register('password', { required: 'Введите пароль' })}
+              {...register('password', {
+                required: 'Введите пароль',
+                minLength: { value: 6, message: 'Минимум 6 символов' },
+              })}
+            />
+
+            <PasswordInput
+              label="Повторите пароль"
+              placeholder="Введите пароль ещё раз"
+              autoComplete="new-password"
+              error={errors.confirmPassword?.message}
+              {...register('confirmPassword', {
+                required: 'Повторите пароль',
+                validate: (val) =>
+                  val === watch('password') || 'Пароли не совпадают',
+              })}
             />
 
             <button
@@ -73,17 +97,14 @@ export default function LoginPage() {
               className="btn-primary"
               disabled={isLoading}
             >
-              {isLoading ? <span className="spinner" aria-hidden="true" /> : 'Войти'}
+              {isLoading ? <span className="spinner" aria-hidden="true" /> : 'Зарегистрироваться'}
             </button>
           </form>
 
           <div className="auth-links">
-            <Link to="/forgot-password" className="auth-link">
-              Забыли пароль?
-            </Link>
-            <span className="auth-links__sep">·</span>
-            <Link to="/register" className="auth-link">
-              Регистрация
+            <span className="auth-links__text">Уже есть аккаунт?</span>
+            <Link to="/login" className="auth-link">
+              Войти
             </Link>
           </div>
         </div>
