@@ -338,6 +338,172 @@ body {
   text-decoration: underline;
 }
 
+/* ── Modal (Create client) ─────────────────────── */
+.modal-dim {
+  position: fixed;
+  inset: 0;
+  padding: 24px;
+  background: rgba(8, 9, 13, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+.modal-box {
+  width: 100%;
+  max-width: 420px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 24px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
+  animation: fadeUp 0.25s ease both;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.modal-title {
+  font-family: var(--font-display);
+  font-size: 20px;
+  letter-spacing: 0.04em;
+  font-weight: 400;
+}
+
+.modal-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--surface-3);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: transform 0.1s, background 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.modal-close:hover {
+  background: rgba(232, 163, 74, 0.08);
+  border-color: rgba(232, 163, 74, 0.35);
+  color: var(--text);
+}
+
+.modal-close:active {
+  transform: scale(0.98);
+}
+
+.modal-subtitle {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 18px;
+  line-height: 1.45;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.modal-textarea {
+  height: 60px;
+  resize: none;
+}
+
+.modal-consent {
+  margin-top: 4px;
+  padding: 10px;
+  background: rgba(232, 163, 74, 0.06);
+  border: 1px solid rgba(232, 163, 74, 0.2);
+  border-radius: var(--r-sm);
+  font-size: 11px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.modal-consent-wrap {
+  margin-bottom: 16px;
+}
+
+.modal-consent-error {
+  margin-top: 6px;
+}
+
+.modal-consent--error {
+  background: rgba(232, 83, 74, 0.08);
+  border-color: rgba(232, 83, 74, 0.35);
+}
+
+.modal-consent__input {
+  margin-top: 2px;
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.modal-consent__text {
+  line-height: 1.35;
+}
+
+.btn-ghost {
+  padding: 12px;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  border-radius: var(--r-sm);
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s, border-color 0.2s, color 0.2s;
+  min-height: 44px;
+}
+
+.btn-ghost:hover {
+  background: rgba(37, 45, 62, 0.55);
+  border-color: rgba(232, 163, 74, 0.25);
+  color: var(--text);
+}
+
+.btn-ghost:active {
+  transform: scale(0.98);
+}
+
+.modal-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.modal-actions .btn-ghost {
+  flex: 1;
+}
+
+.modal-actions .btn-primary {
+  flex: 2;
+  width: auto;
+  margin-top: 0;
+}
+
+@media (max-width: 520px) {
+  .modal-box {
+    padding: 18px;
+  }
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* ── Forgot password page ───────────────────────── */
 .forgot-icon {
   width: 64px;
