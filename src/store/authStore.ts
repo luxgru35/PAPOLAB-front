@@ -3,8 +3,6 @@ import { persist } from 'zustand/middleware';
 import { loginRequest, registerRequest } from '../api/auth';
 import type { AuthState, LoginRequest, RegisterRequest } from '../types/auth';
 
-const APP_ID = Number(import.meta.env.VITE_APP_ID ?? 1);
-
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
@@ -16,9 +14,9 @@ export const useAuthStore = create<AuthState>()(
       login: async (data: LoginRequest) => {
         set({ isLoading: true, error: null });
         try {
-          const { token } = await loginRequest({ ...data, app_id: APP_ID });
-          localStorage.setItem('auth_token', token);
-          set({ token, isAuthenticated: true, isLoading: false });
+          const { access_token } = await loginRequest(data);
+          localStorage.setItem('auth_token', access_token);
+          set({ token: access_token, isAuthenticated: true, isLoading: false });
         } catch (err) {
           const message = err instanceof Error ? err.message : 'Неизвестная ошибка';
           set({ error: message, isLoading: false });
