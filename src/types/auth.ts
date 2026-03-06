@@ -2,11 +2,11 @@
 export interface LoginRequest {
   email: string;
   password: string;
-  app_id: number; // Required by backend — set via VITE_APP_ID env var
 }
 
 export interface LoginResponse {
-  token: string;
+  access_token: string;
+  refresh_token: string;
 }
 
 // ── Register ─────────────────────────────────────

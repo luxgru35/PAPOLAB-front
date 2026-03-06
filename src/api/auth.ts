@@ -1,8 +1,10 @@
 import axios, { AxiosError } from 'axios';
 import type { LoginRequest, LoginResponse, RegisterRequest, RegisterResponse } from '../types/auth';
 
+const defaultBaseURL = import.meta.env.DEV ? '' : 'http://api-gateway-main:8080';
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL ?? 'http://localhost:4055',
+  baseURL: import.meta.env.VITE_API_URL ?? defaultBaseURL,
   headers: { 'Content-Type': 'application/json' },
   timeout: 10_000,
 });
@@ -40,14 +42,12 @@ function handleAxiosError(err: unknown): never {
 
 // ── Login ─────────────────────────────────────────────────────────────
 /**
- * POST /v1/auth/login
- * gRPC: Auth.Login(email, password, app_id) → token
- *
- * app_id is required by the backend — configure via VITE_APP_ID env var.
+ * POST /api/auth/login
+ * API gateway: { email, password } → { access_token, refresh_token }
  */
 export async function loginRequest(body: LoginRequest): Promise<LoginResponse> {
   try {
-    const { data } = await api.post<LoginResponse>('/v1/auth/login', body);
+    const { data } = await api.post<LoginResponse>('/api/auth/login', body);
     return data;
   } catch (err) {
     handleAxiosError(err);
@@ -56,7 +56,7 @@ export async function loginRequest(body: LoginRequest): Promise<LoginResponse> {
 
 // ── Register ──────────────────────────────────────────────────────────
 /**
- * POST /v1/auth/register
+ * POST /api/auth/register
  * gRPC: Auth.Register(email, password) → user_id
  *
  * Backend returns user_id, NOT a token.
@@ -66,7 +66,7 @@ export async function registerRequest(
   body: Omit<RegisterRequest, 'confirmPassword'>
 ): Promise<RegisterResponse> {
   try {
-    const { data } = await api.post<RegisterResponse>('/v1/auth/register', body);
+    const { data } = await api.post<RegisterResponse>('/api/auth/register', body);
     return data;
   } catch (err) {
     handleAxiosError(err);
