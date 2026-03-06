@@ -1,0 +1,1537 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Строительный Калькулятор — Дизайн-система</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Geologica:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0E1117;
+    --surface: #161B25;
+    --surface-2: #1E2433;
+    --surface-3: #252D3E;
+    --border: #2A3347;
+    --accent: #E8A34A;
+    --accent-2: #C4722A;
+    --text: #EDF0F7;
+    --text-muted: #7A8599;
+    --text-dim: #4A5568;
+    --success: #3DD68C;
+    --danger: #E8534A;
+    --warning: #E8C44A;
+    --info: #4A8CE8;
+    --font-display: 'Bebas Neue', sans-serif;
+    --font-body: 'Geologica', sans-serif;
+    --r: 10px;
+    --r-sm: 6px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  
+  body {
+    font-family: var(--font-body);
+    background: #08090D;
+    color: var(--text);
+    padding: 40px 24px;
+  }
+
+  /* ─── Layout ─────────────────────────── */
+  .page-title {
+    font-family: var(--font-display);
+    font-size: 13px;
+    letter-spacing: .18em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin-bottom: 48px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .page-title span { color: var(--accent); }
+
+  .screens-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(600px, 1fr));
+    gap: 40px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .screen-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .screen-label {
+    font-family: var(--font-display);
+    font-size: 11px;
+    letter-spacing: .16em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .screen-label::before {
+    content: '';
+    display: block;
+    width: 20px; height: 2px;
+    background: var(--accent);
+  }
+
+  .screen {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 16px 48px rgba(0,0,0,.5);
+  }
+
+  /* ─── Common Components ───────────────── */
+  .topbar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .logo {
+    font-family: var(--font-display);
+    font-size: 20px;
+    letter-spacing: .08em;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .logo-icon {
+    width: 28px; height: 28px;
+    background: var(--accent);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; color: #0E1117; font-family: var(--font-display);
+  }
+  .topbar-nav {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .nav-link {
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all .2s;
+  }
+  .nav-link.active {
+    background: var(--surface-3);
+    color: var(--text);
+  }
+  .avatar {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 600; color: #0E1117;
+    margin-left: 16px;
+  }
+
+  /* Sidebar */
+  .layout-with-sidebar {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    min-height: 480px;
+  }
+  .sidebar {
+    background: var(--bg);
+    border-right: 1px solid var(--border);
+    padding: 20px 12px;
+  }
+  .sidebar-section {
+    font-size: 10px;
+    letter-spacing: .12em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    padding: 0 8px;
+    margin-bottom: 8px;
+    margin-top: 20px;
+  }
+  .sidebar-section:first-of-type { margin-top: 0; }
+  .sidebar-item {
+    padding: 8px 12px;
+    border-radius: var(--r-sm);
+    font-size: 13px;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 2px;
+  }
+  .sidebar-item.active {
+    background: var(--surface-3);
+    color: var(--text);
+  }
+  .sidebar-item svg { width: 15px; height: 15px; }
+
+  /* Content area */
+  .content { padding: 24px; overflow: hidden; }
+
+  /* Buttons */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 8px 18px; border-radius: var(--r-sm);
+    font-family: var(--font-body); font-size: 13px; font-weight: 500;
+    cursor: pointer; border: none; transition: all .2s;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: #0E1117;
+  }
+  .btn-primary:hover { background: #d4893a; }
+  .btn-ghost {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+  }
+  .btn-sm { padding: 5px 12px; font-size: 12px; }
+
+  /* Form inputs */
+  .form-group { margin-bottom: 14px; }
+  .form-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: .04em;
+    margin-bottom: 6px;
+    display: block;
+  }
+  .form-input {
+    width: 100%;
+    background: var(--surface-3);
+    border: 1px solid var(--border);
+    border-radius: var(--r-sm);
+    padding: 9px 12px;
+    font-family: var(--font-body);
+    font-size: 13px;
+    color: var(--text);
+    outline: none;
+  }
+  .form-input:focus { border-color: var(--accent); }
+  .form-input::placeholder { color: var(--text-dim); }
+
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  /* Tags / Badges */
+  .badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 500;
+  }
+  .badge-green { background: rgba(61,214,140,.12); color: var(--success); }
+  .badge-yellow { background: rgba(232,196,74,.12); color: var(--warning); }
+  .badge-red { background: rgba(232,83,74,.12); color: var(--danger); }
+  .badge-blue { background: rgba(74,140,232,.12); color: var(--info); }
+
+  /* Table */
+  .table { width: 100%; border-collapse: collapse; }
+  .table th {
+    text-align: left;
+    font-size: 10px; font-weight: 500;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .table td {
+    padding: 11px 12px;
+    font-size: 13px;
+    color: var(--text);
+    border-bottom: 1px solid rgba(42,51,71,.5);
+  }
+  .table tr:hover td { background: var(--surface-2); }
+  .table tr:last-child td { border-bottom: none; }
+
+  /* Cards */
+  .card {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    padding: 16px;
+  }
+  .card-title {
+    font-size: 11px;
+    letter-spacing: .06em;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+  .card-value {
+    font-family: var(--font-display);
+    font-size: 26px;
+    letter-spacing: .02em;
+    color: var(--text);
+  }
+  .card-value span { font-size: 14px; color: var(--text-muted); margin-left: 4px; }
+
+  /* Divider */
+  .divider { height: 1px; background: var(--border); margin: 16px 0; }
+
+  /* Modal overlay representation */
+  .modal-wrapper {
+    position: relative;
+    overflow: hidden;
+  }
+  .modal-overlay {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+  .modal-dim {
+    padding: 24px;
+    background: rgba(8,9,13,.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 500px;
+  }
+  .modal-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 24px 64px rgba(0,0,0,.6);
+  }
+  .modal-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .modal-title {
+    font-family: var(--font-display);
+    font-size: 20px;
+    letter-spacing: .04em;
+  }
+  .modal-close {
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    background: var(--surface-3);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    font-size: 14px; color: var(--text-muted);
+  }
+
+  /* Stat row */
+  .stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(42,51,71,.4);
+    font-size: 13px;
+  }
+  .stat-row:last-child { border-bottom: none; }
+  .stat-key { color: var(--text-muted); }
+  .stat-val { font-weight: 600; color: var(--text); }
+  .stat-val.accent { color: var(--accent); }
+
+  /* Section heading */
+  .sec-heading {
+    font-family: var(--font-display);
+    font-size: 18px;
+    letter-spacing: .04em;
+    margin-bottom: 16px;
+  }
+  .sec-subheading {
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    margin-top: 20px;
+  }
+
+  /* Progress bar */
+  .progress-bar {
+    height: 4px; background: var(--surface-3); border-radius: 4px; overflow: hidden;
+  }
+  .progress-fill { height: 100%; background: var(--accent); border-radius: 4px; }
+
+  /* Step indicator */
+  .steps {
+    display: flex; align-items: center; gap: 0; margin-bottom: 24px;
+  }
+  .step {
+    display: flex; align-items: center; flex: 1;
+    font-size: 11px; font-weight: 500;
+  }
+  .step-circle {
+    width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 600;
+    flex-shrink: 0;
+    border: 2px solid var(--border);
+    color: var(--text-muted);
+    background: var(--surface);
+  }
+  .step.active .step-circle { border-color: var(--accent); color: var(--accent); }
+  .step.done .step-circle { background: var(--accent); color: #0E1117; border-color: var(--accent); }
+  .step-label { margin-left: 8px; color: var(--text-muted); }
+  .step.active .step-label, .step.done .step-label { color: var(--text); }
+  .step-line { flex: 1; height: 1px; background: var(--border); margin: 0 8px; }
+  .step.done .step-line { background: var(--accent); }
+
+  /* Choice card */
+  .choice-card {
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    padding: 16px;
+    cursor: pointer;
+    transition: all .2s;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    margin-bottom: 10px;
+  }
+  .choice-card:hover, .choice-card.selected {
+    border-color: var(--accent);
+    background: rgba(232,163,74,.04);
+  }
+  .choice-icon {
+    width: 40px; height: 40px;
+    border-radius: 8px;
+    background: rgba(232,163,74,.12);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; flex-shrink: 0;
+  }
+  .choice-title { font-size: 14px; font-weight: 500; margin-bottom: 3px; }
+  .choice-desc { font-size: 12px; color: var(--text-muted); }
+
+  /* Result section */
+  .result-section {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    margin-bottom: 16px;
+    overflow: hidden;
+  }
+  .result-section-header {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .result-section-title {
+    font-family: var(--font-display);
+    font-size: 15px;
+    letter-spacing: .04em;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .result-section-body { padding: 4px 18px; }
+
+  /* Total row */
+  .total-row {
+    background: rgba(232,163,74,.06);
+    border: 1px solid rgba(232,163,74,.2);
+    border-radius: var(--r);
+    padding: 16px 20px;
+    display: flex; align-items: center; justify-content: space-between;
+    margin-top: 16px;
+  }
+  .total-label {
+    font-size: 14px; color: var(--text-muted);
+  }
+  .total-value {
+    font-family: var(--font-display);
+    font-size: 28px;
+    letter-spacing: .04em;
+    color: var(--accent);
+  }
+  .total-value small { font-size: 14px; margin-left: 4px; color: var(--text-muted); font-family: var(--font-body); }
+
+  /* Breadcrumb */
+  .breadcrumb {
+    font-size: 12px;
+    color: var(--text-muted);
+    display: flex; align-items: center; gap: 6px;
+    margin-bottom: 20px;
+  }
+  .breadcrumb a { color: var(--text-muted); text-decoration: none; }
+  .breadcrumb span { color: var(--text); }
+  .breadcrumb-sep { color: var(--text-dim); }
+
+  /* Input with unit */
+  .input-with-unit {
+    position: relative;
+  }
+  .input-with-unit .form-input { padding-right: 48px; }
+  .input-unit {
+    position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+    font-size: 12px; color: var(--text-dim);
+  }
+
+  /* Radio-ish selector */
+  .segment-control {
+    display: flex;
+    background: var(--surface-3);
+    border-radius: var(--r-sm);
+    padding: 3px;
+    gap: 2px;
+    margin-bottom: 14px;
+  }
+  .segment-item {
+    flex: 1;
+    text-align: center;
+    padding: 6px;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    color: var(--text-muted);
+    transition: all .2s;
+  }
+  .segment-item.active {
+    background: var(--surface);
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  /* client info block */
+  .client-info-block {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    padding: 16px;
+    margin-bottom: 20px;
+  }
+  .cib-item {}
+  .cib-label { font-size: 10px; color: var(--text-dim); letter-spacing: .05em; text-transform: uppercase; margin-bottom: 4px; }
+  .cib-val { font-size: 13px; font-weight: 500; }
+
+  /* error state */
+  .input-error { border-color: var(--danger) !important; }
+  .error-msg { font-size: 11px; color: var(--danger); margin-top: 4px; }
+
+  /* Toast */
+  .toast {
+    background: var(--surface-3);
+    border: 1px solid var(--border);
+    border-radius: var(--r-sm);
+    padding: 10px 14px;
+    font-size: 13px;
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 16px;
+    border-left: 3px solid var(--danger);
+  }
+  .toast.success { border-left-color: var(--success); }
+
+  /* Tag selectable */
+  .tag-select {
+    display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px;
+  }
+  .tag-option {
+    padding: 5px 14px;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all .2s;
+    color: var(--text-muted);
+  }
+  .tag-option.sel { border-color: var(--accent); color: var(--accent); background: rgba(232,163,74,.06); }
+
+  /* Search box */
+  .search-box {
+    position: relative;
+    margin-bottom: 16px;
+  }
+  .search-box .form-input { padding-left: 36px; }
+  .search-icon {
+    position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+    color: var(--text-dim); font-size: 14px;
+  }
+
+  /* Icon button */
+  .icon-btn {
+    width: 30px; height: 30px;
+    border-radius: 6px;
+    background: var(--surface-3);
+    border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    font-size: 13px; color: var(--text-muted);
+  }
+
+  /* Top summary cards */
+  .summary-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  /* Number input with arrows */
+  .num-input { display: flex; align-items: center; }
+  .num-btn {
+    width: 30px; height: 36px;
+    background: var(--surface-3);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 16px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .num-btn:first-child { border-radius: var(--r-sm) 0 0 var(--r-sm); border-right: none; }
+  .num-btn:last-child { border-radius: 0 var(--r-sm) var(--r-sm) 0; border-left: none; }
+  .num-field {
+    flex: 1;
+    background: var(--surface-3);
+    border: 1px solid var(--border);
+    border-left: none; border-right: none;
+    height: 36px;
+    text-align: center;
+    font-family: var(--font-body); font-size: 13px; color: var(--text);
+    outline: none;
+  }
+
+  /* Clients table row status dot */
+  .status-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    display: inline-block; margin-right: 6px;
+  }
+
+  /* Empty state */
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-muted);
+  }
+  .empty-icon { font-size: 32px; margin-bottom: 12px; opacity: .4; }
+  .empty-title { font-size: 14px; font-weight: 500; margin-bottom: 6px; }
+  .empty-desc { font-size: 12px; color: var(--text-dim); }
+</style>
+</head>
+<body>
+
+<div class="page-title">
+  <span>▣</span> Строительный Калькулятор — <span>Дизайн всех страниц</span> &nbsp;/ Figma Reference
+</div>
+
+<div class="screens-grid">
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- 1. СТРАНИЦА АВТОРИЗАЦИИ                -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="screen-wrapper">
+    <div class="screen-label">01 — Страница авторизации</div>
+    <div class="screen" style="background: var(--bg);">
+      <div style="display:grid; grid-template-columns:1fr 1fr; min-height:520px;">
+        <!-- Left panel -->
+        <div style="background: var(--surface); padding:48px 40px; display:flex; flex-direction:column; justify-content:center; border-right:1px solid var(--border);">
+          <div class="logo" style="margin-bottom:40px;">
+            <div class="logo-icon">С</div>
+            СтройКалькулятор
+          </div>
+          <div style="font-family:var(--font-display); font-size:28px; letter-spacing:.04em; margin-bottom:6px;">Добро пожаловать</div>
+          <div style="font-size:13px; color:var(--text-muted); margin-bottom:32px;">Войдите в систему, чтобы продолжить</div>
+          
+          <div class="toast" style="margin-bottom:20px; display:none;">⚠️ Неверный логин или пароль. Попробуйте снова.</div>
+          
+          <div class="form-group">
+            <label class="form-label">Логин</label>
+            <input class="form-input" value="manager@stroyco.ru" placeholder="Введите логин">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Пароль</label>
+            <input class="form-input" type="password" value="••••••••" placeholder="Введите пароль">
+          </div>
+          <div style="margin-top:8px;">
+            <button class="btn btn-primary" style="width:100%; padding:11px; font-size:14px;">Войти</button>
+          </div>
+          <div style="margin-top:16px; text-align:center; font-size:12px; color:var(--text-dim);">
+            Забыли пароль? Обратитесь к администратору
+          </div>
+        </div>
+        <!-- Right panel — illustration -->
+        <div style="background: linear-gradient(160deg, #12181F 0%, #0E1117 100%); padding:40px; display:flex; flex-direction:column; justify-content:flex-end; position:relative; overflow:hidden;">
+          <div style="position:absolute; top:0; left:0; right:0; bottom:0; opacity:.04; background: repeating-linear-gradient(0deg,transparent,transparent 28px,var(--border) 28px,var(--border) 29px), repeating-linear-gradient(90deg,transparent,transparent 28px,var(--border) 28px,var(--border) 29px);"></div>
+          <!-- Floating cards -->
+          <div style="position:absolute; top:40px; left:24px; background:var(--surface-2); border:1px solid var(--border); border-radius:10px; padding:14px 18px; width:180px;">
+            <div style="font-size:10px; color:var(--text-dim); text-transform:uppercase; letter-spacing:.1em; margin-bottom:6px;">Фундамент</div>
+            <div style="font-family:var(--font-display); font-size:22px; color:var(--accent);">284 500 ₽</div>
+            <div style="font-size:11px; color:var(--success); margin-top:4px;">↑ Актуален</div>
+          </div>
+          <div style="position:absolute; top:120px; right:24px; background:var(--surface-2); border:1px solid var(--border); border-radius:10px; padding:14px 18px; width:160px;">
+            <div style="font-size:10px; color:var(--text-dim); text-transform:uppercase; letter-spacing:.1em; margin-bottom:6px;">Каркас</div>
+            <div style="font-family:var(--font-display); font-size:22px; color:var(--accent);">1 340 000 ₽</div>
+          </div>
+          <div style="font-family:var(--font-display); font-size:48px; letter-spacing:.04em; line-height:1; color:var(--text); opacity:.08; margin-bottom:8px;">СТРОИМ</div>
+          <div style="font-family:var(--font-display); font-size:48px; letter-spacing:.04em; line-height:1; color:var(--accent); opacity:.14;">ТОЧНЕЕ</div>
+          <div style="font-size:12px; color:var(--text-dim); margin-top:20px;">ООО «Строительная компания» · Ульяновская область</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- 2. СПИСОК КЛИЕНТОВ                     -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="screen-wrapper">
+    <div class="screen-label">02 — Список клиентов</div>
+    <div class="screen">
+      <div class="topbar">
+        <div class="logo"><div class="logo-icon">С</div>СтройКалькулятор</div>
+        <div class="topbar-nav">
+          <div class="nav-link active">Клиенты</div>
+          <div class="nav-link">Расчёты</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="font-size:12px; color:var(--text-muted);">Иванова М.П.</div>
+          <div class="avatar">ИМ</div>
+        </div>
+      </div>
+      <div class="content">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;">
+          <div>
+            <div style="font-family:var(--font-display); font-size:22px; letter-spacing:.04em;">Клиенты</div>
+            <div style="font-size:12px; color:var(--text-muted); margin-top:2px;">Всего: 24 клиента</div>
+          </div>
+          <button class="btn btn-primary">+ Создать клиента</button>
+        </div>
+        <!-- Summary -->
+        <div class="summary-cards">
+          <div class="card">
+            <div class="card-title">Все клиенты</div>
+            <div class="card-value">24 <span>чел.</span></div>
+          </div>
+          <div class="card">
+            <div class="card-title">Актуальных расчётов</div>
+            <div class="card-value">8 <span>шт.</span></div>
+          </div>
+          <div class="card">
+            <div class="card-title">Заключено договоров</div>
+            <div class="card-value">12 <span>шт.</span></div>
+          </div>
+        </div>
+        <!-- Search + filter -->
+        <div style="display:flex; gap:8px; margin-bottom:16px;">
+          <div class="search-box" style="flex:1; margin:0;">
+            <span class="search-icon">⌕</span>
+            <input class="form-input" style="padding-left:36px;" placeholder="Поиск по имени, телефону...">
+          </div>
+          <div class="icon-btn" title="Фильтр">≡</div>
+        </div>
+        <!-- Table -->
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Клиент</th>
+              <th>Телефон</th>
+              <th>Расчётов</th>
+              <th>Статус</th>
+              <th>Дата</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><div style="font-weight:500;">Петров Андрей Сергеевич</div><div style="font-size:11px;color:var(--text-dim);">petrov@mail.ru</div></td>
+              <td>+7 927 112-34-56</td>
+              <td>2</td>
+              <td><span class="badge badge-green"><span class="status-dot" style="background:var(--success);"></span>Актуален</span></td>
+              <td style="font-size:12px;color:var(--text-muted);">15 янв 2021</td>
+            </tr>
+            <tr>
+              <td><div style="font-weight:500;">Смирнова Ольга Ивановна</div><div style="font-size:11px;color:var(--text-dim);">smirnova@gmail.com</div></td>
+              <td>+7 927 223-45-67</td>
+              <td>1</td>
+              <td><span class="badge badge-yellow"><span class="status-dot" style="background:var(--warning);"></span>Договор</span></td>
+              <td style="font-size:12px;color:var(--text-muted);">12 янв 2021</td>
+            </tr>
+            <tr>
+              <td><div style="font-weight:500;">Козлов Виктор Петрович</div><div style="font-size:11px;color:var(--text-dim);">kozlov@yandex.ru</div></td>
+              <td>+7 917 334-56-78</td>
+              <td>3</td>
+              <td><span class="badge badge-red"><span class="status-dot" style="background:var(--danger);"></span>Не актуален</span></td>
+              <td style="font-size:12px;color:var(--text-muted);">8 янв 2021</td>
+            </tr>
+            <tr>
+              <td><div style="font-weight:500;">Николаева Светлана</div><div style="font-size:11px;color:var(--text-dim);">—</div></td>
+              <td>+7 927 445-67-89</td>
+              <td>1</td>
+              <td><span class="badge badge-blue"><span class="status-dot" style="background:var(--info);"></span>Новый</span></td>
+              <td style="font-size:12px;color:var(--text-muted);">5 янв 2021</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- 3. МОДАЛЬНОЕ ОКНО — СОЗДАТЬ КЛИЕНТА    -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="screen-wrapper">
+    <div class="screen-label">03 — Модальное окно: Создать клиента</div>
+    <div class="modal-overlay">
+      <div class="topbar" style="opacity:.4;">
+        <div class="logo"><div class="logo-icon">С</div>СтройКалькулятор</div>
+      </div>
+      <div class="modal-dim">
+        <div class="modal-box">
+          <div class="modal-header">
+            <div class="modal-title">Новый клиент</div>
+            <div class="modal-close">✕</div>
+          </div>
+          <div style="font-size:12px; color:var(--text-muted); margin-bottom:20px;">
+            Заполните данные клиента. Поля, отмеченные *, обязательны.
+          </div>
+          <div class="form-group">
+            <label class="form-label">Фамилия *</label>
+            <input class="form-input" placeholder="Введите фамилию">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Имя *</label>
+              <input class="form-input" placeholder="Имя">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Отчество</label>
+              <input class="form-input" placeholder="Отчество">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Телефон *</label>
+            <input class="form-input" placeholder="+7 ___ ___-__-__">
+          </div>
+          <div class="form-group">
+            <label class="form-label">E-mail</label>
+            <input class="form-input" placeholder="email@example.com">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Примечание</label>
+            <textarea class="form-input" style="height:60px; resize:none;" placeholder="Дополнительная информация..."></textarea>
+          </div>
+          <div style="margin-top:4px; padding:10px; background:rgba(232,163,74,.06); border:1px solid rgba(232,163,74,.2); border-radius:var(--r-sm); font-size:11px; color:var(--text-muted); margin-bottom:16px;">
+            ✓ Клиент дал согласие на обработку персональных данных (152-ФЗ)
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button class="btn btn-ghost" style="flex:1;">Отмена</button>
+            <button class="btn btn-primary" style="flex:2;">Создать клиента</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- 4. КАРТОЧКА КЛИЕНТА                    -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="screen-wrapper">
+    <div class="screen-label">04 — Карточка клиента</div>
+    <div class="screen">
+      <div class="topbar">
+        <div class="logo"><div class="logo-icon">С</div>СтройКалькулятор</div>
+        <div class="topbar-nav">
+          <div class="nav-link">Клиенты</div>
+        </div>
+        <div class="avatar">ИМ</div>
+      </div>
+      <div class="layout-with-sidebar">
+        <div class="sidebar">
+          <div class="sidebar-section">Навигация</div>
+          <div class="sidebar-item active">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="5" r="3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>
+            Карточка
+          </div>
+          <div class="sidebar-item">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="10" rx="1"/><path d="M5 7h6M5 10h4"/></svg>
+            Расчёты
+          </div>
+          <div class="sidebar-section" style="margin-top:16px;">Статус</div>
+          <div style="padding:8px 12px;">
+            <span class="badge badge-green" style="font-size:11px;">✓ Актуален до 25 янв</span>
+          </div>
+        </div>
+        <div class="content">
+          <div class="breadcrumb">
+            <a>Клиенты</a>
+            <span class="breadcrumb-sep">›</span>
+            <span>Петров Андрей Сергеевич</span>
+          </div>
+          
+          <!-- Client info -->
+          <div style="display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:16px;">
+            <div style="display:flex; align-items:center; gap:14px;">
+              <div style="width:52px; height:52px; border-radius:50%; background:linear-gradient(135deg,var(--accent),var(--accent-2)); display:flex;align-items:center;justify-content:center; font-family:var(--font-display); font-size:22px; color:#0E1117;">ПА</div>
+              <div>
+                <div style="font-family:var(--font-display); font-size:20px; letter-spacing:.03em;">Петров Андрей Сергеевич</div>
+                <div style="font-size:12px; color:var(--text-muted);">+7 927 112-34-56 &nbsp;·&nbsp; petrov@mail.ru</div>
+              </div>
+            </div>
+            <button class="btn btn-ghost btn-sm">✎ Редактировать</button>
+          </div>
+          
+          <div class="client-info-block">
+            <div class="cib-item"><div class="cib-label">Телефон</div><div class="cib-val">+7 927 112-34-56</div></div>
+            <div class="cib-item"><div class="cib-label">E-mail</div><div class="cib-val">petrov@mail.ru</div></div>
+            <div class="cib-item"><div class="cib-label">Добавлен</div><div class="cib-val">15 янв 2021</div></div>
+          </div>
+          
+          <!-- Calculations -->
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+            <div style="font-size:13px; font-weight:600;">Расчёты клиента</div>
+            <button class="btn btn-primary btn-sm">+ Создать расчёт</button>
+          </div>
+          
+          <div class="result-section">
+            <div class="result-section-header">
+              <div class="result-section-title">
+                🏠 Расчёт №1
+                <span class="badge badge-green" style="font-size:10px;">Актуален</span>
+              </div>
+              <div style="display:flex; gap:6px;">
+                <button class="btn btn-ghost btn-sm">Открыть</button>
+                <button class="btn btn-ghost btn-sm">✎</button>
+              </div>
+            </div>
+            <div class="result-section-body" style="padding:12px 18px;">
+              <div style="display:flex; gap:20px; font-size:12px; color:var(--text-muted);">
+                <span>📐 Каркас + Фундамент</span>
+                <span>📅 Создан: 15 янв 2021</span>
+                <span>⏱ Актуален до: 25 янв 2021</span>
+              </div>
+              <div style="font-family:var(--font-display); font-size:20px; color:var(--accent); margin-top:8px;">1 624 500 ₽</div>
+            </div>
+          </div>
+
+          <div class="result-section">
+            <div class="result-section-header">
+              <div class="result-section-title">
+                🧱 Расчёт №2
+                <span class="badge badge-red" style="font-size:10px;">Не актуален</span>
+              </div>
+              <div><button class="btn btn-ghost btn-sm">Открыть</button></div>
+            </div>
+            <div class="result-section-body" style="padding:12px 18px;">
+              <div style="font-size:12px; color:var(--text-muted);">📐 Фундамент · 28 дек 2020</div>
+              <div style="font-family:var(--font-display); font-size:20px; color:var(--text-muted); margin-top:8px;">284 500 ₽</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- 5. ВЫБОР КОНСТРУКТИВНОГО ЭЛЕМЕНТА      -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="screen-wrapper">
+    <div class="screen-label">05 — Модальное окно: Выбор элемента</div>
+    <div class="modal-overlay">
+      <div class="topbar" style="opacity:.4;">
+        <div class="logo"><div class="logo-icon">С</div>СтройКалькулятор</div>
+      </div>
+      <div class="modal-dim">
+        <div class="modal-box" style="max-width:460px;">
+          <div class="modal-header">
+            <div class="modal-title">Конструктивный элемент</div>
+            <div class="modal-close">✕</div>
+          </div>
+          <div style="font-size:12px; color:var(--text-muted); margin-bottom:20px;">
+            Выберите элемент для расчёта стоимости
+          </div>
+          
+          <div class="choice-card selected">
+            <div class="choice-icon">🏗️</div>
+            <div>
+              <div class="choice-title">Каркас и перекрытия</div>
+              <div class="choice-desc">Установка каркаса, перекрытий, расчёт материалов по заданным параметрам</div>
+            </div>
+            <div style="margin-left:auto; color:var(--accent); font-size:18px;">◉</div>
+          </div>
+          
+          <div class="choice-card">
+            <div class="choice-icon">🔩</div>
+            <div>
+              <div class="choice-title">Фундамент</div>
+              <div class="choice-desc">Обустройство свайного ленточного фундамента, расчёт бетона и опалубки</div>
+            </div>
+            <div style="margin-left:auto; color:var(--text-dim); font-size:18px;">○</div>
+          </div>
+
+          <div class="choice-card" style="opacity:.4; cursor:not-allowed;">
+            <div class="choice-icon">🏠</div>
+            <div>
+              <div class="choice-title">Кровля</div>
+              <div class="choice-desc">Возведение кровли — будет доступно в следующей версии</div>
+            </div>
+            <div style="margin-left:auto;"><span class="badge badge-yellow" style="font-size:10px;">Скоро</span></div>
+          </div>
+          
+          <div style="display:flex; gap:8px; margin-top:20px;">
+            <button class="btn btn-ghost" style="flex:1;">Отмена</button>
+            <button class="btn btn-primary" style="flex:2;">Перейти к расчёту →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- 6. ВВОД ДАННЫХ — КАРКАС                -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="screen-wrapper">
+    <div class="screen-label">06 — Ввод данных: Каркас и перекрытия</div>
+    <div class="screen">
+      <div class="topbar">
+        <div class="logo"><div class="logo-icon">С</div>СтройКалькулятор</div>
+        <div style="display:flex;align-items:center;gap:6px; font-size:12px; color:var(--text-muted);">
+          Петров А.С. &nbsp;›&nbsp; <span style="color:var(--text);">Каркас</span>
+        </div>
+        <div class="avatar">ИМ</div>
+      </div>
+      <div class="content">
+        <!-- Steps -->
+        <div class="steps">
+          <div class="step done">
+            <div class="step-circle">✓</div>
+            <div class="step-label" style="font-size:11px;">Клиент</div>
+          </div>
+          <div class="step-line"></div>
+          <div class="step done">
+            <div class="step-circle">✓</div>
+            <div class="step-label" style="font-size:11px;">Элемент</div>
+          </div>
+          <div class="step-line"></div>
+          <div class="step active">
+            <div class="step-circle">3</div>
+            <div class="step-label" style="font-size:11px;">Параметры</div>
+          </div>
+          <div class="step-line" style="background:var(--border);"></div>
+          <div class="step">
+            <div class="step-circle">4</div>
+            <div class="step-label" style="font-size:11px;">Расчёт</div>
+          </div>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:20px;">
+          <div style="width:36px; height:36px; background:rgba(232,163,74,.12); border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:18px;">🏗️</div>
+          <div>
+            <div style="font-family:var(--font-display); font-size:19px; letter-spacing:.04em;">Каркас и перекрытия</div>
+            <div style="font-size:11px; color:var(--text-muted);">Заполните параметры строительства</div>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+          <!-- Левая колонка -->
+          <div>
+            <div class="sec-subheading">Размеры дома</div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Длина *</label>
+                <div class="input-with-unit">
+                  <input class="form-input" value="10">
+                  <span class="input-unit">м</span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Ширина *</label>
+                <div class="input-with-unit">
+                  <input class="form-input" value="8">
+                  <span class="input-unit">м</span>
+                </div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Высота этажа *</label>
+              <div class="input-with-unit">
+                <input class="form-input" value="3">
+                <span class="input-unit">м</span>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Количество этажей *</label>
+              <div class="num-input">
+                <button class="num-btn">−</button>
+                <input class="num-field" value="2">
+                <button class="num-btn">+</button>
+              </div>
+            </div>
+
+            <div class="sec-subheading">Шаг стоек</div>
+            <div class="segment-control">
+              <div class="segment-item active">400 мм</div>
+              <div class="segment-item">500 мм</div>
+              <div class="segment-item">600 мм</div>
+            </div>
+          </div>
+
+          <!-- Правая колонка -->
+          <div>
+            <div class="sec-subheading">Стены и проёмы</div>
+            <div class="form-group">
+              <label class="form-label">Кол-во внутренних перегородок</label>
+              <div class="num-input">
+                <button class="num-btn">−</button>
+                <input class="num-field" value="4">
+                <button class="num-btn">+</button>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Кол-во окон</label>
+                <div class="num-input">
+                  <button class="num-btn">−</button>
+                  <input class="num-field" value="8">
+                  <button class="num-btn">+</button>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Кол-во дверей</label>
+                <div class="num-input">
+                  <button class="num-btn">−</button>
+                  <input class="num-field" value="6">
+                  <button class="num-btn">+</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="sec-subheading">Перекрытие</div>
+            <div class="tag-select">
+              <div class="tag-option sel">Деревянное</div>
+              <div class="tag-option">Металл</div>
+              <div class="tag-option">Бетонное</div>
+            </div>
+
+            <div class="sec-subheading">Тип утеплителя</div>
+            <div class="tag-select">
+              <div class="tag-option sel">Минвата 150мм</div>
+              <div class="tag-option">Пенопласт</div>
+              <div class="tag-option">ЭППС</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:8px; padding-top:16px; border-top:1px solid var(--border);">
+          <button class="btn btn-ghost">← Назад</button>
+          <button class="btn btn-primary" style="padding:9px 28px; font-size:14px;">Рассчитать →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- 7. ВВОД ДАННЫХ — ФУНДАМЕНТ             -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="screen-wrapper">
+    <div class="screen-label">07 — Ввод данных: Фундамент</div>
+    <div class="screen">
+      <div class="topbar">
+        <div class="logo"><div class="logo-icon">С</div>СтройКалькулятор</div>
+        <div style="display:flex;align-items:center;gap:6px; font-size:12px; color:var(--text-muted);">
+          Петров А.С. &nbsp;›&nbsp; <span style="color:var(--text);">Фундамент</span>
+        </div>
+        <div class="avatar">ИМ</div>
+      </div>
+      <div class="content">
+        <div class="steps">
+          <div class="step done"><div class="step-circle">✓</div><div class="step-label" style="font-size:11px;">Клиент</div></div>
+          <div class="step-line"></div>
+          <div class="step done"><div class="step-circle">✓</div><div class="step-label" style="font-size:11px;">Элемент</div></div>
+          <div class="step-line"></div>
+          <div class="step active"><div class="step-circle">3</div><div class="step-label" style="font-size:11px;">Параметры</div></div>
+          <div class="step-line" style="background:var(--border);"></div>
+          <div class="step"><div class="step-circle">4</div><div class="step-label" style="font-size:11px;">Расчёт</div></div>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:20px;">
+          <div style="width:36px; height:36px; background:rgba(232,163,74,.12); border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:18px;">🔩</div>
+          <div>
+            <div style="font-family:var(--font-display); font-size:19px; letter-spacing:.04em;">Фундамент</div>
+            <div style="font-size:11px; color:var(--text-muted);">Свайный фундамент — параметры расчёта</div>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+          <div>
+            <div class="sec-subheading">Параметры ленты</div>
+            <div class="form-group">
+              <label class="form-label">Общая длина ленты *</label>
+              <div class="input-with-unit"><input class="form-input" value="36"><span class="input-unit">м</span></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Ширина ленты *</label>
+                <div class="input-with-unit"><input class="form-input" value="0.4"><span class="input-unit">м</span></div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Глубина ленты *</label>
+                <div class="input-with-unit"><input class="form-input" value="1.2"><span class="input-unit">м</span></div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Высота над землёй *</label>
+              <div class="input-with-unit"><input class="form-input" value="0.3"><span class="input-unit">м</span></div>
+            </div>
+            
+            <!-- Calculated preview -->
+            <div style="background:rgba(232,163,74,.04); border:1px solid rgba(232,163,74,.15); border-radius:var(--r-sm); padding:12px; margin-top:8px;">
+              <div style="font-size:10px; text-transform:uppercase; letter-spacing:.1em; color:var(--accent); margin-bottom:8px;">Предварительный расчёт</div>
+              <div class="stat-row" style="font-size:12px;">
+                <span class="stat-key">Объём бетона</span>
+                <span class="stat-val">17.28 м³</span>
+              </div>
+              <div class="stat-row" style="font-size:12px;">
+                <span class="stat-key">Площадь подошвы</span>
+                <span class="stat-val">14.4 м²</span>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="sec-subheading">Арматура</div>
+            <div class="form-group">
+              <label class="form-label">Диаметр прутка *</label>
+              <div class="segment-control">
+                <div class="segment-item">10 мм</div>
+                <div class="segment-item active">12 мм</div>
+                <div class="segment-item">14 мм</div>
+                <div class="segment-item">16 мм</div>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Рядов армирования</label>
+                <div class="num-input">
+                  <button class="num-btn">−</button>
+                  <input class="num-field" value="2">
+                  <button class="num-btn">+</button>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Прутков в ряду</label>
+                <div class="num-input">
+                  <button class="num-btn">−</button>
+                  <input class="num-field" value="3">
+                  <button class="num-btn">+</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="sec-subheading">Опалубка</div>
+            <div class="tag-select">
+              <div class="tag-option sel">Деревянная</div>
+              <div class="tag-option">Несъёмная</div>
+            </div>
+
+            <div class="sec-subheading">Марка бетона</div>
+            <div class="tag-select">
+              <div class="tag-option">М200</div>
+              <div class="tag-option sel">М250</div>
+              <div class="tag-option">М300</div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Дополнительные работы</label>
+              <textarea class="form-input" style="height:52px; resize:none;" placeholder="Примечания..."></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:8px; padding-top:16px; border-top:1px solid var(--border);">
+          <button class="btn btn-ghost">← Назад</button>
+          <button class="btn btn-primary" style="padding:9px 28px; font-size:14px;">Рассчитать →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- 8. СТРАНИЦА РАСЧЁТА (ОТЧЁТ)            -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="screen-wrapper" style="grid-column: 1 / -1;">
+    <div class="screen-label">08 — Страница расчёта / Отчёт</div>
+    <div class="screen">
+      <div class="topbar">
+        <div class="logo"><div class="logo-icon">С</div>СтройКалькулятор</div>
+        <div style="display:flex;align-items:center;gap:6px; font-size:12px; color:var(--text-muted);">
+          Клиенты &nbsp;›&nbsp; Петров А.С. &nbsp;›&nbsp; <span style="color:var(--text);">Расчёт №1</span>
+        </div>
+        <div class="avatar">ИМ</div>
+      </div>
+      <div class="layout-with-sidebar">
+        <div class="sidebar">
+          <div class="sidebar-section">Элементы</div>
+          <div class="sidebar-item active">🏗️ Каркас</div>
+          <div class="sidebar-item">🔩 Фундамент</div>
+          <div style="margin-top:12px; padding:0 8px;">
+            <button class="btn btn-ghost btn-sm" style="width:100%; font-size:11px;">+ Добавить элемент</button>
+          </div>
+          <div class="sidebar-section" style="margin-top:20px;">Статус</div>
+          <div style="padding:8px 12px;">
+            <span class="badge badge-green" style="font-size:10px; display:block; text-align:center; padding:5px 8px;">✓ Актуален</span>
+            <div style="font-size:10px; color:var(--text-dim); text-align:center; margin-top:6px;">до 25 янв 2021</div>
+            <div class="progress-bar" style="margin-top:8px;">
+              <div class="progress-fill" style="width:40%;"></div>
+            </div>
+            <div style="font-size:10px; color:var(--text-dim); text-align:center; margin-top:4px;">4 из 10 дней</div>
+          </div>
+        </div>
+        
+        <div class="content" style="padding:20px 24px;">
+          <!-- Header row -->
+          <div style="display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:20px;">
+            <div>
+              <div class="breadcrumb" style="margin-bottom:8px;">
+                <a>Клиенты</a><span class="breadcrumb-sep">›</span>
+                <a>Петров Андрей Сергеевич</a><span class="breadcrumb-sep">›</span>
+                <span>Расчёт №1</span>
+              </div>
+              <div style="font-family:var(--font-display); font-size:22px; letter-spacing:.04em; margin-bottom:2px;">Смета расчёта</div>
+              <div style="font-size:12px; color:var(--text-muted);">Создан: 15 января 2021 · Менеджер: Иванова М.П.</div>
+            </div>
+            <div style="display:flex; gap:8px;">
+              <button class="btn btn-ghost btn-sm">📄 Экспорт</button>
+              <button class="btn btn-ghost btn-sm">✎ Редактировать</button>
+            </div>
+          </div>
+
+          <!-- Two-column layout -->
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+            
+            <!-- Left: Sections -->
+            <div>
+              <!-- Каркас section -->
+              <div class="result-section">
+                <div class="result-section-header">
+                  <div class="result-section-title">🏗️ Каркас и перекрытия</div>
+                  <button class="btn btn-ghost btn-sm">✎</button>
+                </div>
+                <div class="result-section-body">
+                  <div class="stat-row">
+                    <span class="stat-key">Брус 150×150, 6м</span>
+                    <span class="stat-val">48 шт.</span>
+                  </div>
+                  <div class="stat-row">
+                    <span class="stat-key">Доска обрезная 50×150</span>
+                    <span class="stat-val">3.2 м³</span>
+                  </div>
+                  <div class="stat-row">
+                    <span class="stat-key">Металлические крепления</span>
+                    <span class="stat-val">320 шт.</span>
+                  </div>
+                  <div class="stat-row">
+                    <span class="stat-key">Утеплитель минвата</span>
+                    <span class="stat-val">240 м²</span>
+                  </div>
+                  <div class="stat-row">
+                    <span class="stat-key">Ветрозащитная мембрана</span>
+                    <span class="stat-val">260 м²</span>
+                  </div>
+                  <div class="stat-row" style="border-top:1px solid var(--border); margin-top:4px; padding-top:12px;">
+                    <span class="stat-key" style="font-weight:600; color:var(--text);">Итого материалы</span>
+                    <span class="stat-val accent">1 340 000 ₽</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Фундамент section -->
+              <div class="result-section">
+                <div class="result-section-header">
+                  <div class="result-section-title">🔩 Фундамент</div>
+                  <button class="btn btn-ghost btn-sm">✎</button>
+                </div>
+                <div class="result-section-body">
+                  <div class="stat-row">
+                    <span class="stat-key">Бетон М250</span>
+                    <span class="stat-val">17.28 м³</span>
+                  </div>
+                  <div class="stat-row">
+                    <span class="stat-key">Арматура Ø12мм</span>
+                    <span class="stat-val">864 кг</span>
+                  </div>
+                  <div class="stat-row">
+                    <span class="stat-key">Доска опалубки</span>
+                    <span class="stat-val">1.8 м³</span>
+                  </div>
+                  <div class="stat-row">
+                    <span class="stat-key">Гидроизоляция</span>
+                    <span class="stat-val">72 м²</span>
+                  </div>
+                  <div class="stat-row" style="border-top:1px solid var(--border); margin-top:4px; padding-top:12px;">
+                    <span class="stat-key" style="font-weight:600; color:var(--text);">Итого материалы</span>
+                    <span class="stat-val accent">284 500 ₽</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right: Summary -->
+            <div>
+              <div style="font-size:11px; text-transform:uppercase; letter-spacing:.1em; color:var(--text-muted); margin-bottom:12px;">Сводная информация</div>
+
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px;">
+                <div class="card">
+                  <div class="card-title">Каркас</div>
+                  <div class="card-value" style="font-size:20px;">1 340 000 <span>₽</span></div>
+                </div>
+                <div class="card">
+                  <div class="card-title">Фундамент</div>
+                  <div class="card-value" style="font-size:20px;">284 500 <span>₽</span></div>
+                </div>
+              </div>
+
+              <!-- Parameter summary -->
+              <div class="card" style="margin-bottom:16px;">
+                <div class="card-title" style="margin-bottom:12px;">Параметры объекта</div>
+                <div class="stat-row" style="font-size:12px;">
+                  <span class="stat-key">Площадь дома</span><span class="stat-val">80 м²</span>
+                </div>
+                <div class="stat-row" style="font-size:12px;">
+                  <span class="stat-key">Этажность</span><span class="stat-val">2 этажа</span>
+                </div>
+                <div class="stat-row" style="font-size:12px;">
+                  <span class="stat-key">Длина ленты фундамента</span><span class="stat-val">36 м</span>
+                </div>
+                <div class="stat-row" style="font-size:12px;">
+                  <span class="stat-key">Объём бетона</span><span class="stat-val">17.28 м³</span>
+                </div>
+                <div class="stat-row" style="font-size:12px;">
+                  <span class="stat-key">Площадь подошвы</span><span class="stat-val">14.4 м²</span>
+                </div>
+              </div>
+
+              <!-- Total -->
+              <div class="total-row">
+                <div>
+                  <div class="total-label">Итого по смете</div>
+                  <div style="font-size:11px; color:var(--text-dim);">Цены зафиксированы на 10 дней</div>
+                </div>
+                <div class="total-value">1 624 500 <small>₽</small></div>
+              </div>
+
+              <!-- Actions -->
+              <div style="display:flex; gap:8px; margin-top:16px;">
+                <button class="btn btn-ghost" style="flex:1; font-size:12px;">Заключить договор</button>
+                <button class="btn btn-primary" style="flex:1;">+ Доб. элемент</button>
+              </div>
+              
+              <div style="margin-top:12px; padding:10px 14px; background:rgba(74,140,232,.06); border:1px solid rgba(74,140,232,.15); border-radius:var(--r-sm); font-size:11px; color:var(--text-muted);">
+                ℹ️ Расчёт актуален до <strong style="color:var(--text);">25 января 2021</strong>. После этого требуется пересчёт по актуальным ценам.
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- 9. СОСТОЯНИЕ ОШИБКИ / ВАЛИДАЦИЯ        -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="screen-wrapper">
+    <div class="screen-label">09 — Состояния: Ошибка валидации</div>
+    <div class="screen" style="padding:24px;">
+      <div style="font-size:11px; text-transform:uppercase; letter-spacing:.1em; color:var(--text-muted); margin-bottom:16px;">Пример ошибок формы</div>
+      
+      <div class="toast">⚠️ Пожалуйста, исправьте ошибки перед расчётом</div>
+      
+      <div class="form-group">
+        <label class="form-label">Логин *</label>
+        <input class="form-input input-error" value="неверный логин">
+        <div class="error-msg">⚑ Логин введён неверно. Попробуйте снова или обратитесь к администратору</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Длина, м *</label>
+        <input class="form-input input-error" placeholder="">
+        <div class="error-msg">⚑ Данное поле обязательно для заполнения</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Ширина, м *</label>
+        <input class="form-input" value="8">
+      </div>
+
+      <div style="margin-top:20px; font-size:11px; text-transform:uppercase; letter-spacing:.1em; color:var(--text-muted); margin-bottom:16px;">Тосты / уведомления</div>
+      <div class="toast" style="border-left-color:var(--danger);">❌ Неверный логин или пароль</div>
+      <div class="toast success">✓ Клиент успешно создан и сохранён</div>
+      <div class="toast" style="border-left-color:var(--warning);">⏱ Цены на расчёт истекают через 2 дня</div>
+      <div class="toast" style="border-left-color:var(--info);">📧 Email-уведомление отправлено клиенту</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- 10. ЦВЕТОВАЯ И ТИПОГРАФСКАЯ СИСТЕМА    -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="screen-wrapper">
+    <div class="screen-label">10 — Design Tokens: Цвета и типографика</div>
+    <div class="screen" style="padding:24px;">
+      <div style="font-size:11px; text-transform:uppercase; letter-spacing:.1em; color:var(--text-muted); margin-bottom:16px;">Основная палитра</div>
+      <div style="display:grid; grid-template-columns:repeat(5, 1fr); gap:8px; margin-bottom:24px;">
+        <div style="text-align:center;">
+          <div style="height:48px; border-radius:8px; background:#0E1117; border:1px solid var(--border); margin-bottom:6px;"></div>
+          <div style="font-size:10px; color:var(--text-muted);">BG</div>
+          <div style="font-size:9px; color:var(--text-dim);">#0E1117</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="height:48px; border-radius:8px; background:#161B25; border:1px solid var(--border); margin-bottom:6px;"></div>
+          <div style="font-size:10px; color:var(--text-muted);">Surface</div>
+          <div style="font-size:9px; color:var(--text-dim);">#161B25</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="height:48px; border-radius:8px; background:#1E2433; border:1px solid var(--border); margin-bottom:6px;"></div>
+          <div style="font-size:10px; color:var(--text-muted);">Surface 2</div>
+          <div style="font-size:9px; color:var(--text-dim);">#1E2433</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="height:48px; border-radius:8px; background:#E8A34A; margin-bottom:6px;"></div>
+          <div style="font-size:10px; color:var(--text-muted);">Accent</div>
+          <div style="font-size:9px; color:var(--text-dim);">#E8A34A</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="height:48px; border-radius:8px; background:#2A3347; margin-bottom:6px;"></div>
+          <div style="font-size:10px; color:var(--text-muted);">Border</div>
+          <div style="font-size:9px; color:var(--text-dim);">#2A3347</div>
+        </div>
+      </div>
+      <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:8px; margin-bottom:24px;">
+        <div style="text-align:center;"><div style="height:32px; border-radius:6px; background:#3DD68C; margin-bottom:4px;"></div><div style="font-size:10px; color:var(--text-muted);">Success</div></div>
+        <div style="text-align:center;"><div style="height:32px; border-radius:6px; background:#E8534A; margin-bottom:4px;"></div><div style="font-size:10px; color:var(--text-muted);">Danger</div></div>
+        <div style="text-align:center;"><div style="height:32px; border-radius:6px; background:#E8C44A; margin-bottom:4px;"></div><div style="font-size:10px; color:var(--text-muted);">Warning</div></div>
+        <div style="text-align:center;"><div style="height:32px; border-radius:6px; background:#4A8CE8; margin-bottom:4px;"></div><div style="font-size:10px; color:var(--text-muted);">Info</div></div>
+      </div>
+      
+      <div style="font-size:11px; text-transform:uppercase; letter-spacing:.1em; color:var(--text-muted); margin-bottom:16px;">Типографика</div>
+      <div style="font-family:var(--font-display); font-size:36px; letter-spacing:.04em; margin-bottom:4px;">Bebas Neue — Заголовок</div>
+      <div style="font-family:var(--font-display); font-size:22px; letter-spacing:.03em; color:var(--text-muted); margin-bottom:4px;">H2 — Подзаголовок раздела</div>
+      <div style="font-family:var(--font-display); font-size:16px; letter-spacing:.04em; color:var(--accent); margin-bottom:16px;">H3 — Название секции</div>
+      <div style="font-size:14px; margin-bottom:6px; font-weight:500;">Geologica Medium — Основной текст (14px)</div>
+      <div style="font-size:13px; color:var(--text-muted); margin-bottom:6px;">Geologica Regular — Вторичный текст (13px)</div>
+      <div style="font-size:11px; color:var(--text-dim); letter-spacing:.06em; text-transform:uppercase;">GEOLOGICA — ПОДПИСЬ / ЛЕЙБЛ (11px)</div>
+
+      <div style="margin-top:20px; font-size:11px; text-transform:uppercase; letter-spacing:.1em; color:var(--text-muted); margin-bottom:12px;">Компоненты-кнопки</div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+        <button class="btn btn-primary">Primary</button>
+        <button class="btn btn-ghost">Ghost</button>
+        <button class="btn btn-primary btn-sm">Small Primary</button>
+        <button class="btn btn-ghost btn-sm">Small Ghost</button>
+      </div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-top:10px;">
+        <span class="badge badge-green">Актуален</span>
+        <span class="badge badge-yellow">Договор</span>
+        <span class="badge badge-red">Не актуален</span>
+        <span class="badge badge-blue">Новый</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>
