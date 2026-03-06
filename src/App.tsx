@@ -9,7 +9,6 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
 }
 
-// Placeholder — replace with your actual dashboard component
 function Dashboard() {
   const logout = useAuthStore((s) => s.logout);
   return (
