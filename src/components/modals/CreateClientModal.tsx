@@ -1,5 +1,7 @@
 import { useForm } from 'react-hook-form';
 import { Input } from '../ui/Input';
+import { clientsApi } from '../../api/clients';
+import type { CreateClientPayload } from '../../types/client';
 
 export type CreateClientModalProps = {
   open: boolean;
@@ -36,8 +38,16 @@ export function CreateClientModal({ open, onClose }: CreateClientModalProps) {
     },
   });
 
-  const onSubmit = () => {
-    // UI-only: если форма валидна — считаем, что создание прошло
+  const onSubmit = async (values: CreateClientFormValues) => {
+    const payload: CreateClientPayload = {
+      last_name: values.lastName.trim(),
+      first_name: values.firstName.trim(),
+      middle_name: values.patronymic.trim(),
+      phone: values.phone.trim(),
+      email: values.email.trim(),
+    };
+
+    await clientsApi.create(payload);
     onClose?.();
   };
 
