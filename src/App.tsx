@@ -1,9 +1,13 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { useAuthStore } from './store/authStore';
+
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ClientsPage from './pages/ClientsPage';
-import { useAuthStore } from './store/authStore';
+import ClientCardPage from './pages/ClientCardPage';
+import NewOrderPage from './pages/NewOrderPage';
+import OrderPage from './pages/OrderPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
@@ -21,8 +25,11 @@ export default function App() {
 
         {/* Protected */}
         <Route path="/clients" element={<ProtectedRoute><ClientsPage /></ProtectedRoute>} />
+        <Route path="/clients/:id" element={<ProtectedRoute><ClientCardPage /></ProtectedRoute>} />
+        <Route path="/clients/:id/new-order" element={<ProtectedRoute><NewOrderPage /></ProtectedRoute>} />
+        <Route path="/orders/:id" element={<ProtectedRoute><OrderPage /></ProtectedRoute>} />
 
-        {/* Redirect root → clients */}
+        {/* Redirects */}
         <Route path="/" element={<Navigate to="/clients" replace />} />
         <Route path="*" element={<Navigate to="/clients" replace />} />
       </Routes>

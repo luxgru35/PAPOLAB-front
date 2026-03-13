@@ -1,75 +1,86 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Topbar } from '../components/layout/Topbar';
 import { CreateClientModal } from '../components/modals/CreateClientModal';
-import { MOCK_CLIENTS } from '../tempData/mockClients';
-import type { Client, ClientStatus } from '../types/client';
+import { clientsApi } from '../api/clients';
+import { clientFullName } from '../types/client';
+import type { Client } from '../types/client';
 
-// ── Helpers ───────────────────────────────────────
-const STATUS_CONFIG: Record<ClientStatus, { label: string; badge: string; dot: string }> = {
-  active:   { label: 'Актуален',    badge: 'badge-green',  dot: 'var(--success)' },
-  contract: { label: 'Договор',     badge: 'badge-yellow', dot: 'var(--warning)' },
-  inactive: { label: 'Не актуален', badge: 'badge-red',    dot: 'var(--danger)'  },
-  new:      { label: 'Новый',       badge: 'badge-blue',   dot: 'var(--info)'    },
+const STATUS_MAP = {
+  accepted: { label: 'Актуален', badge: 'badge-green', dot: 'var(--success)' },
+  in_progress: { label: 'В работе', badge: 'badge-yellow', dot: 'var(--warning)' },
+  delivered: { label: 'Договор', badge: 'badge-blue', dot: 'var(--info)' },
+  inactive: { label: 'Не актуален', badge: 'badge-red', dot: 'var(--danger)' },
 };
+
+function getClientBadge(c: Client) {
+  // Derive status from orders when card is loaded; for list view use created_at heuristic
+  return STATUS_MAP.accepted; // будет заменено когда придут статусы с карточки
+}
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('ru-RU', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
+    day: 'numeric', month: 'short', year: 'numeric',
   });
 }
 
-function fullName(c: Client) {
-  return [c.lastName, c.firstName, c.patronymic].filter(Boolean).join(' ');
-}
-
-// ── Component ─────────────────────────────────────
 export default function ClientsPage() {
-  const [clients, setClients] = useState<Client[]>(MOCK_CLIENTS);
+  const navigate = useNavigate();
+  const [clients, setClients] = useState<Client[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
 
-  // Client-side search
+  const load = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await clientsApi.list();
+      setClients(data);
+    } catch {
+      setError('Не удалось загрузить клиентов');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { load(); }, []);
+
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
     if (!q) return clients;
     return clients.filter(
       (c) =>
-        fullName(c).toLowerCase().includes(q) ||
+        clientFullName(c).toLowerCase().includes(q) ||
         c.phone.includes(q) ||
         c.email?.toLowerCase().includes(q)
     );
   }, [clients, search]);
 
-  // Stats
-  const totalActive = clients.filter((c) => c.status === 'active').length;
-  const totalCalcs = clients.reduce((sum, c) => sum + c.calculationsCount, 0);
-  const totalContracts = clients.filter((c) => c.status === 'contract').length;
-
-  // Add new client from modal (mock — no backend yet)
   const handleClientCreated = () => {
     setModalOpen(false);
-    // TODO: replace with real API call + refetch
+    load();
   };
 
   return (
     <div className="app-shell">
       <Topbar />
-
       <main className="page-content">
-        {/* ── Header ── */}
+        {/* Header */}
         <div className="page-header">
           <div>
             <div className="page-title-text">Клиенты</div>
-            <div className="page-subtitle">Всего: {clients.length} клиента</div>
+            <div className="page-subtitle">
+              {loading ? 'Загрузка...' : `Всего: ${clients.length}`}
+            </div>
           </div>
-          <button className="btn-primary btn-primary--inline" onClick={() => setModalOpen(true)}>
+          <button className="btn btn-primary btn-primary--inline" onClick={() => setModalOpen(true)}>
             + Создать клиента
           </button>
         </div>
 
-        {/* ── Summary cards ── */}
+        {/* Summary */}
         <div className="summary-cards">
           <div className="card">
             <div className="card-title">Все клиенты</div>
@@ -77,15 +88,15 @@ export default function ClientsPage() {
           </div>
           <div className="card">
             <div className="card-title">Актуальных расчётов</div>
-            <div className="card-value">{totalCalcs} <span>шт.</span></div>
+            <div className="card-value">—</div>
           </div>
           <div className="card">
             <div className="card-title">Заключено договоров</div>
-            <div className="card-value">{totalContracts} <span>шт.</span></div>
+            <div className="card-value">—</div>
           </div>
         </div>
 
-        {/* ── Search ── */}
+        {/* Search */}
         <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
           <div className="search-box" style={{ flex: 1, margin: 0 }}>
             <span className="search-icon">
@@ -101,18 +112,33 @@ export default function ClientsPage() {
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-          <button className="icon-btn" title="Фильтр">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="4" y1="6" x2="20" y2="6" /><line x1="8" y1="12" x2="16" y2="12" /><line x1="11" y1="18" x2="13" y2="18" />
-            </svg>
-          </button>
         </div>
 
-        {/* ── Table ── */}
-        {filtered.length === 0 ? (
+        {/* State: loading / error / empty / table */}
+        {loading ? (
           <div className="empty-state">
-            <div className="empty-icon">🔍</div>
-            <div>Клиенты не найдены</div>
+            <div className="empty-icon">⏳</div>
+            <div>Загрузка клиентов...</div>
+          </div>
+        ) : error ? (
+          <div className="empty-state">
+            <div className="empty-icon">⚠️</div>
+            <div style={{ marginBottom: 12 }}>{error}</div>
+            <button className="btn btn-ghost" onClick={load}>Повторить</button>
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="empty-state">
+            <div className="empty-icon">{search ? '🔍' : '👤'}</div>
+            <div>{search ? 'Клиенты не найдены' : 'Клиентов пока нет'}</div>
+            {!search && (
+              <button
+                className="btn btn-primary btn-primary--inline"
+                style={{ marginTop: 16 }}
+                onClick={() => setModalOpen(true)}
+              >
+                + Создать первого клиента
+              </button>
+            )}
           </div>
         ) : (
           <div className="table-wrap">
@@ -121,47 +147,35 @@ export default function ClientsPage() {
                 <tr>
                   <th>Клиент</th>
                   <th>Телефон</th>
-                  <th>Расчётов</th>
-                  <th>Статус</th>
-                  <th>Дата</th>
+                  <th>Дата добавления</th>
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((client) => {
-                  const status = STATUS_CONFIG[client.status];
-                  return (
-                    <tr key={client.id} style={{ cursor: 'pointer' }}>
-                      <td>
-                        <div style={{ fontWeight: 500 }}>{fullName(client)}</div>
-                        <div style={{ fontSize: 11, color: 'var(--text-dim)' }}>
-                          {client.email ?? '—'}
-                        </div>
-                      </td>
-                      <td>{client.phone}</td>
-                      <td>{client.calculationsCount}</td>
-                      <td>
-                        <span className={`badge ${status.badge}`}>
-                          <span className="status-dot" style={{ background: status.dot }} />
-                          {status.label}
-                        </span>
-                      </td>
-                      <td style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                        {formatDate(client.createdAt)}
-                      </td>
-                    </tr>
-                  );
-                })}
+                {filtered.map((client) => (
+                  <tr
+                    key={client.id}
+                    style={{ cursor: 'pointer' }}
+                    onClick={() => navigate(`/clients/${client.id}`)}
+                  >
+                    <td>
+                      <div style={{ fontWeight: 500 }}>{clientFullName(client)}</div>
+                      <div style={{ fontSize: 11, color: 'var(--text-dim)' }}>
+                        {client.email || '—'}
+                      </div>
+                    </td>
+                    <td>{client.phone || '—'}</td>
+                    <td style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                      {formatDate(client.created_at)}
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
         )}
       </main>
 
-      {/* ── Modal ── */}
-      <CreateClientModal
-        open={modalOpen}
-        onClose={handleClientCreated}
-      />
+      <CreateClientModal open={modalOpen} onClose={handleClientCreated} />
     </div>
   );
 }
