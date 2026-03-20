@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Topbar } from '../components/layout/Topbar';
 import { clientsApi } from '../api/clients';
 import { clientFullName, clientInitials } from '../types/client';
-import { formatMinor, STATUS_LABELS, CALC_TYPE_LABELS } from '../types/order';
+import { STATUS_LABELS, CALC_TYPE_LABELS } from '../types/order';
 import type { ClientCard } from '../types/client';
 
 function formatDate(iso: string) {
@@ -30,6 +30,15 @@ export default function ClientCardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [sidebarTab, setSidebarTab] = useState<'card' | 'orders'>('card');
+  const [isEditing, setIsEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [editForm, setEditForm] = useState({
+    last_name: '',
+    first_name: '',
+    middle_name: '',
+    phone: '',
+    email: '',
+  });
 
   useEffect(() => {
     if (!id) return;
@@ -37,6 +46,13 @@ export default function ClientCardPage() {
       try {
         const data = await clientsApi.getCard(id);
         setCard(data);
+        setEditForm({
+          last_name: data.client.last_name ?? '',
+          first_name: data.client.first_name ?? '',
+          middle_name: data.client.middle_name ?? '',
+          phone: data.client.phone ?? '',
+          email: data.client.email ?? '',
+        });
       } catch {
         setError('Не удалось загрузить карточку клиента');
       } finally {
@@ -75,6 +91,24 @@ export default function ClientCardPage() {
   const { client, orders } = card;
   const initials = clientInitials(client);
   const fullName = clientFullName(client);
+
+  const saveClient = async () => {
+    if (!id) return;
+    try {
+      setSaving(true);
+      const updated = await clientsApi.update(id, {
+        last_name: editForm.last_name.trim(),
+        first_name: editForm.first_name.trim(),
+        middle_name: editForm.middle_name.trim(),
+        phone: editForm.phone.trim(),
+        email: editForm.email.trim(),
+      });
+      setCard((prev) => (prev ? { ...prev, client: updated } : prev));
+      setIsEditing(false);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <div className="app-shell">
@@ -153,23 +187,93 @@ export default function ClientCardPage() {
                     </div>
                   </div>
                 </div>
-                <button className="btn btn-ghost btn-sm">✎ Редактировать</button>
+                {isEditing ? (
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button
+                      className="btn btn-ghost btn-sm"
+                      onClick={() => {
+                        setEditForm({
+                          last_name: client.last_name ?? '',
+                          first_name: client.first_name ?? '',
+                          middle_name: client.middle_name ?? '',
+                          phone: client.phone ?? '',
+                          email: client.email ?? '',
+                        });
+                        setIsEditing(false);
+                      }}
+                    >
+                      Отмена
+                    </button>
+                    <button className="btn btn-primary btn-sm" onClick={saveClient} disabled={saving}>
+                      {saving ? 'Сохранение...' : 'Сохранить'}
+                    </button>
+                  </div>
+                ) : (
+                  <button className="btn btn-ghost btn-sm" onClick={() => setIsEditing(true)}>
+                    ✎ Редактировать
+                  </button>
+                )}
               </div>
 
               <div className="client-info-block">
                 <div className="cib-item">
                   <div className="cib-label">Телефон</div>
-                  <div className="cib-val">{client.phone || '—'}</div>
+                  {isEditing ? (
+                    <input
+                      className="form-input"
+                      value={editForm.phone}
+                      onChange={(e) => setEditForm((prev) => ({ ...prev, phone: e.target.value }))}
+                    />
+                  ) : (
+                    <div className="cib-val">{client.phone || '—'}</div>
+                  )}
                 </div>
                 <div className="cib-item">
                   <div className="cib-label">E-mail</div>
-                  <div className="cib-val">{client.email || '—'}</div>
+                  {isEditing ? (
+                    <input
+                      className="form-input"
+                      value={editForm.email}
+                      onChange={(e) => setEditForm((prev) => ({ ...prev, email: e.target.value }))}
+                    />
+                  ) : (
+                    <div className="cib-val">{client.email || '—'}</div>
+                  )}
                 </div>
                 <div className="cib-item">
                   <div className="cib-label">Добавлен</div>
                   <div className="cib-val">{formatDate(client.created_at)}</div>
                 </div>
               </div>
+
+              {isEditing && (
+                <div className="client-info-block" style={{ marginTop: -8 }}>
+                  <div className="cib-item">
+                    <div className="cib-label">Фамилия</div>
+                    <input
+                      className="form-input"
+                      value={editForm.last_name}
+                      onChange={(e) => setEditForm((prev) => ({ ...prev, last_name: e.target.value }))}
+                    />
+                  </div>
+                  <div className="cib-item">
+                    <div className="cib-label">Имя</div>
+                    <input
+                      className="form-input"
+                      value={editForm.first_name}
+                      onChange={(e) => setEditForm((prev) => ({ ...prev, first_name: e.target.value }))}
+                    />
+                  </div>
+                  <div className="cib-item">
+                    <div className="cib-label">Отчество</div>
+                    <input
+                      className="form-input"
+                      value={editForm.middle_name}
+                      onChange={(e) => setEditForm((prev) => ({ ...prev, middle_name: e.target.value }))}
+                    />
+                  </div>
+                </div>
+              )}
 
               {/* Orders section */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>

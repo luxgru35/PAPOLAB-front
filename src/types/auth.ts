@@ -7,6 +7,7 @@ export interface LoginRequest {
 export interface LoginResponse {
   access_token: string;
   refresh_token: string;
+  manager_name?: string;
 }
 
 // ── Register ─────────────────────────────────────
@@ -23,6 +24,7 @@ export interface RegisterResponse {
 // ── Zustand store ─────────────────────────────────
 export interface AuthState {
   token: string | null;
+  displayName: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;

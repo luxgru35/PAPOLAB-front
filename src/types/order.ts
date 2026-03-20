@@ -23,9 +23,12 @@ export interface Order {
   status: OrderStatus;
   calc_type: CalcType;
   calc_version: number;
-  input: unknown;
-  result: unknown;
-  price_snapshot: PriceSnapshot;
+  input?: unknown;
+  input_json?: unknown;
+  result?: unknown;
+  result_json?: unknown;
+  price_snapshot?: PriceSnapshot;
+  price_snapshot_json?: PriceSnapshot;
   total_cost_minor: number;
   created_at: string;
   updated_at: string;

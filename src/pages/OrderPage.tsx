@@ -9,6 +9,105 @@ function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
+function extractFallbackLines(result: unknown, calcType: Order['calc_type']): PriceLine[] {
+  if (calcType === 'foundation' && result && typeof result === 'object') {
+    const r = result as Record<string, unknown>;
+    const rows: Array<{ key: string; name: string; unit: string; quantity: number }> = [
+      { key: 'foundation:piles', name: 'Сваи', unit: 'шт', quantity: Number(r.piles_count ?? 0) },
+      { key: 'foundation:concrete', name: 'Бетон (ростверк)', unit: 'м3', quantity: Number(r.grillage_concrete_m3 ?? 0) },
+      { key: 'foundation:rebar14', name: 'Арматура 14 мм', unit: 'шт', quantity: Number(r.rebar_14_units ?? 0) },
+      { key: 'foundation:rebar8', name: 'Арматура 8 мм', unit: 'шт', quantity: Number(r.rebar_8_units ?? 0) },
+      { key: 'foundation:formwork_boards', name: 'Доски для опалубки', unit: 'шт', quantity: Number(r.formwork_boards ?? 0) },
+      { key: 'foundation:formwork_timber', name: 'Брус для опалубки', unit: 'м3', quantity: Number(r.formwork_timber_m3 ?? 0) },
+    ];
+
+    const mapped = rows
+      .filter((line) => Number.isFinite(line.quantity) && line.quantity > 0)
+      .map((line) => ({
+        key: line.key,
+        name: line.name,
+        unit: line.unit,
+        quantity: Number(line.quantity.toFixed(3)),
+        unit_price_minor: 0,
+        total_minor: 0,
+      } satisfies PriceLine));
+
+    if (mapped.length > 0) return mapped;
+  }
+
+  if (calcType === 'frame' && result && typeof result === 'object') {
+    const rec = result as Record<string, unknown>;
+    const totals = (rec.totals && typeof rec.totals === 'object') ? (rec.totals as Record<string, unknown>) : null;
+    const outerWalls = totals?.outer_walls && typeof totals.outer_walls === 'object'
+      ? (totals.outer_walls as Record<string, unknown>)
+      : null;
+    const innerWalls = totals?.inner_walls && typeof totals.inner_walls === 'object'
+      ? (totals.inner_walls as Record<string, unknown>)
+      : null;
+    const overlaps = totals?.overlaps && typeof totals.overlaps === 'object'
+      ? (totals.overlaps as Record<string, unknown>)
+      : null;
+
+    if (outerWalls || innerWalls || overlaps) {
+      const rows: Array<{ key: string; name: string; unit: string; quantity: number }> = [
+        { key: 'frame:outer_stud_boards', name: 'Доски на внешние стойки', unit: 'шт', quantity: Number(outerWalls?.stud_boards_qty ?? 0) },
+        { key: 'frame:outer_total_boards', name: 'Доски на внешние стены', unit: 'шт', quantity: Number(outerWalls?.total_boards_qty ?? 0) },
+        { key: 'frame:outer_osb', name: 'ОСБ (внешние стены)', unit: 'м2', quantity: Number(outerWalls?.osb_area_m2 ?? 0) },
+        { key: 'frame:outer_vapor', name: 'Пароизоляция (внешние стены)', unit: 'м2', quantity: Number(outerWalls?.vapor_area_m2 ?? 0) },
+        { key: 'frame:outer_wind', name: 'Ветрозащита (внешние стены)', unit: 'м2', quantity: Number(outerWalls?.wind_area_m2 ?? 0) },
+        { key: 'frame:outer_insulation', name: 'Утеплитель (внешние стены)', unit: 'м3', quantity: Number(outerWalls?.insulation_volume_m3 ?? 0) },
+        { key: 'frame:inner_boards_volume', name: 'Доски на внутренние стены', unit: 'м3', quantity: Number(innerWalls?.boards_volume_m3 ?? 0) },
+        { key: 'frame:inner_osb', name: 'ОСБ (внутренние стены)', unit: 'м2', quantity: Number(innerWalls?.osb_area_m2 ?? 0) },
+        { key: 'frame:beams_volume', name: 'Балки на перекрытия', unit: 'м3', quantity: Number(overlaps?.beams_volume_m3 ?? 0) },
+        { key: 'frame:overlap_osb', name: 'ОСБ (перекрытия)', unit: 'м2', quantity: Number(overlaps?.osb_area_m2 ?? 0) },
+        { key: 'frame:overlap_vapor', name: 'Пароизоляция (перекрытия)', unit: 'м2', quantity: Number(overlaps?.vapor_area_m2 ?? 0) },
+        { key: 'frame:overlap_wind', name: 'Ветрозащита (перекрытия)', unit: 'м2', quantity: Number(overlaps?.wind_area_m2 ?? 0) },
+        { key: 'frame:overlap_insulation', name: 'Утеплитель (перекрытия)', unit: 'м3', quantity: Number(overlaps?.insulation_volume_m3 ?? 0) },
+      ];
+
+      const mapped = rows
+        .filter((line) => Number.isFinite(line.quantity) && line.quantity > 0)
+        .map((line) => ({
+          key: line.key,
+          name: line.name,
+          unit: line.unit,
+          quantity: Number(line.quantity.toFixed(3)),
+          unit_price_minor: 0,
+          total_minor: 0,
+        } satisfies PriceLine));
+
+      if (mapped.length > 0) return mapped;
+    }
+  }
+
+  if (!result || typeof result !== 'object') return [];
+  const rec = result as Record<string, unknown>;
+  const candidates = ['materials', 'items', 'lines', 'breakdown'];
+  for (const key of candidates) {
+    const value = rec[key];
+    if (!Array.isArray(value)) continue;
+    return value
+      .map((item, idx) => {
+        if (!item || typeof item !== 'object') return null;
+        const it = item as Record<string, unknown>;
+        const name = String(it.name ?? it.title ?? it.key ?? `Материал ${idx + 1}`);
+        const quantity = Number(it.quantity ?? it.qty ?? 0);
+        const unit = String(it.unit ?? 'шт');
+        const totalMinor = Number(it.total_minor ?? it.total ?? 0);
+        return {
+          key: String(it.key ?? `${key}-${idx}`),
+          name,
+          unit,
+          quantity: Number.isFinite(quantity) ? quantity : 0,
+          unit_price_minor: 0,
+          total_minor: Number.isFinite(totalMinor) ? totalMinor : 0,
+        } satisfies PriceLine;
+      })
+      .filter(Boolean) as PriceLine[];
+  }
+  return [];
+}
+
 const STATUS_BADGE: Record<string, string> = {
   accepted: 'badge-green',
   in_progress: 'badge-yellow',
@@ -92,9 +191,15 @@ export default function OrderPage() {
   }
 
   const typeInfo = CALC_TYPE_LABELS[order.calc_type];
-  const lines: PriceLine[] = order.price_snapshot?.lines ?? [];
+  const snapshot = order.price_snapshot ?? order.price_snapshot_json;
+  const resultPayload = order.result ?? order.result_json;
+  const lines: PriceLine[] = (
+    snapshot?.lines?.length
+      ? snapshot.lines
+      : extractFallbackLines(resultPayload, order.calc_type)
+  ) ?? [];
   const total = order.total_cost_minor;
-  const missing = order.price_snapshot?.missing_price_keys ?? [];
+  const missing = snapshot?.missing_price_keys ?? [];
 
   return (
     <div className="app-shell">
@@ -110,9 +215,9 @@ export default function OrderPage() {
             <button
               className="btn btn-ghost btn-sm"
               style={{ width: '100%', fontSize: 11 }}
-              onClick={() => navigate(`/clients/${order.client_id}/new-order`)}
+                onClick={() => navigate(`/clients/${order.client_id}/new-order`)}
             >
-              + Добавить элемент
+                + Новый расчёт
             </button>
           </div>
 
@@ -161,6 +266,9 @@ export default function OrderPage() {
               </div>
             </div>
             <div style={{ display: 'flex', gap: 8 }}>
+              <button className="btn btn-ghost btn-sm" onClick={() => navigate(`/orders/${order.id}/edit`)}>
+                ✎ Редактировать
+              </button>
               <button className="btn btn-ghost btn-sm">📄 Экспорт</button>
             </div>
           </div>
@@ -264,7 +372,7 @@ export default function OrderPage() {
                   style={{ flex: 1 }}
                   onClick={() => navigate(`/clients/${order.client_id}/new-order`)}
                 >
-                  + Доб. элемент
+                  + Новый расчёт
                 </button>
               </div>
             </div>

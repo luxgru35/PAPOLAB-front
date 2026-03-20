@@ -6,18 +6,6 @@ import { clientsApi } from '../api/clients';
 import { clientFullName } from '../types/client';
 import type { Client } from '../types/client';
 
-const STATUS_MAP = {
-  accepted: { label: 'Актуален', badge: 'badge-green', dot: 'var(--success)' },
-  in_progress: { label: 'В работе', badge: 'badge-yellow', dot: 'var(--warning)' },
-  delivered: { label: 'Договор', badge: 'badge-blue', dot: 'var(--info)' },
-  inactive: { label: 'Не актуален', badge: 'badge-red', dot: 'var(--danger)' },
-};
-
-function getClientBadge(c: Client) {
-  // Derive status from orders when card is loaded; for list view use created_at heuristic
-  return STATUS_MAP.accepted; // будет заменено когда придут статусы с карточки
-}
-
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('ru-RU', {
     day: 'numeric', month: 'short', year: 'numeric',
@@ -27,6 +15,7 @@ function formatDate(iso: string) {
 export default function ClientsPage() {
   const navigate = useNavigate();
   const [clients, setClients] = useState<Client[]>([]);
+  const [stats, setStats] = useState({ accepted: 0, delivered: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
@@ -46,6 +35,28 @@ export default function ClientsPage() {
   };
 
   useEffect(() => { load(); }, []);
+
+  useEffect(() => {
+    (async () => {
+      if (clients.length === 0) {
+        setStats({ accepted: 0, delivered: 0 });
+        return;
+      }
+      const cards = await Promise.allSettled(clients.map((c) => clientsApi.getCard(c.id)));
+      let accepted = 0;
+      let delivered = 0;
+
+      cards.forEach((card) => {
+        if (card.status !== 'fulfilled') return;
+        card.value.orders.forEach((order) => {
+          if (order.status === 'accepted') accepted += 1;
+          if (order.status === 'delivered') delivered += 1;
+        });
+      });
+
+      setStats({ accepted, delivered });
+    })();
+  }, [clients]);
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
@@ -88,11 +99,11 @@ export default function ClientsPage() {
           </div>
           <div className="card">
             <div className="card-title">Актуальных расчётов</div>
-            <div className="card-value">—</div>
+            <div className="card-value">{stats.accepted} <span>шт.</span></div>
           </div>
           <div className="card">
             <div className="card-title">Заключено договоров</div>
-            <div className="card-value">—</div>
+            <div className="card-value">{stats.delivered} <span>шт.</span></div>
           </div>
         </div>
 

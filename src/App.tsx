@@ -8,6 +8,7 @@ import ClientsPage from './pages/ClientsPage';
 import ClientCardPage from './pages/ClientCardPage';
 import NewOrderPage from './pages/NewOrderPage';
 import OrderPage from './pages/OrderPage';
+import EditOrderPage from './pages/EditOrderPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
@@ -28,6 +29,7 @@ export default function App() {
         <Route path="/clients/:id" element={<ProtectedRoute><ClientCardPage /></ProtectedRoute>} />
         <Route path="/clients/:id/new-order" element={<ProtectedRoute><NewOrderPage /></ProtectedRoute>} />
         <Route path="/orders/:id" element={<ProtectedRoute><OrderPage /></ProtectedRoute>} />
+        <Route path="/orders/:id/edit" element={<ProtectedRoute><EditOrderPage /></ProtectedRoute>} />
 
         {/* Redirects */}
         <Route path="/" element={<Navigate to="/clients" replace />} />

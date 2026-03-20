@@ -12,7 +12,7 @@ export const ordersApi = {
 
   recalc: (orderId: string, input: unknown) =>
     axios
-      .put<Order>(`/api/v1/orders/${orderId}/recalc`, { input })
+      .put<Order>(`/api/v1/orders/${orderId}/calc`, { input })
       .then((r) => r.data),
 
   updateStatus: (orderId: string, status: string) =>
