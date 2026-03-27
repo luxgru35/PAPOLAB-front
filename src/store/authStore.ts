@@ -19,6 +19,7 @@ export const useAuthStore = create<AuthState>()(
     (set) => ({
       token: null,
       displayName: null,
+      email: null,
       isAuthenticated: false,
       isLoading: false,
       error: null,
@@ -31,6 +32,7 @@ export const useAuthStore = create<AuthState>()(
           set({
             token: access_token,
             displayName: manager_name?.trim() || displayNameFromEmail(data.email),
+            email: data.email,
             isAuthenticated: true,
             isLoading: false,
           });
@@ -56,7 +58,7 @@ export const useAuthStore = create<AuthState>()(
 
       logout: () => {
         localStorage.removeItem('auth_token');
-        set({ token: null, displayName: null, isAuthenticated: false, error: null });
+        set({ token: null, displayName: null, email: null, isAuthenticated: false, error: null });
       },
 
       clearError: () => set({ error: null }),
@@ -66,6 +68,7 @@ export const useAuthStore = create<AuthState>()(
       partialize: (state) => ({
         token: state.token,
         displayName: state.displayName,
+        email: state.email,
         isAuthenticated: state.isAuthenticated,
       }),
     }

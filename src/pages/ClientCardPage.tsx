@@ -5,6 +5,7 @@ import { clientsApi } from '../api/clients';
 import { clientFullName, clientInitials } from '../types/client';
 import { STATUS_LABELS, CALC_TYPE_LABELS } from '../types/order';
 import type { ClientCard } from '../types/client';
+import { Footer } from '../components/layout/Footer';
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('ru-RU', {
@@ -17,6 +18,7 @@ const STATUS_BADGE: Record<string, string> = {
   in_progress: 'badge-yellow',
   delivered: 'badge-blue',
 };
+
 const STATUS_DOT: Record<string, string> = {
   accepted: 'var(--success)',
   in_progress: 'var(--warning)',
@@ -29,7 +31,6 @@ export default function ClientCardPage() {
   const [card, setCard] = useState<ClientCard | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [sidebarTab, setSidebarTab] = useState<'card' | 'orders'>('card');
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [editForm, setEditForm] = useState({
@@ -69,6 +70,7 @@ export default function ClientCardPage() {
           <div className="empty-icon">⏳</div>
           <div>Загрузка...</div>
         </div>
+        <Footer />
       </div>
     );
   }
@@ -79,11 +81,12 @@ export default function ClientCardPage() {
         <Topbar />
         <div className="empty-state" style={{ marginTop: 60 }}>
           <div className="empty-icon">⚠️</div>
-          <div>{error ?? 'Клиент не найден'}</div>
-          <button className="btn btn-ghost" style={{ marginTop: 16 }} onClick={() => navigate('/clients')}>
+          <div style={{ marginBottom: 12 }}>{error ?? 'Клиент не найден'}</div>
+          <button className="btn btn-ghost" onClick={() => navigate('/clients')}>
             ← Назад
           </button>
         </div>
+        <Footer />
       </div>
     );
   }
@@ -91,6 +94,11 @@ export default function ClientCardPage() {
   const { client, orders } = card;
   const initials = clientInitials(client);
   const fullName = clientFullName(client);
+
+  // Сортируем заказы по дате создания (от старых к новым)
+  const sortedOrders = [...orders].sort((a, b) => 
+    new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+  );
 
   const saveClient = async () => {
     if (!id) return;
@@ -116,43 +124,46 @@ export default function ClientCardPage() {
       <div className="layout-with-sidebar" style={{ flex: 1, minHeight: 'calc(100vh - 56px)' }}>
         {/* ── Sidebar ── */}
         <div className="sidebar">
-          <div className="sidebar-section">Навигация</div>
-          <div
-            className={`sidebar-item ${sidebarTab === 'card' ? 'active' : ''}`}
-            onClick={() => setSidebarTab('card')}
+          {/* Кнопка возврата */}
+          <button 
+            className="sidebar-item sidebar-item--back" 
+            onClick={() => navigate('/clients')}
           >
-            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <circle cx="8" cy="5" r="3" /><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6" />
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M19 12H5M12 19l-7-7 7-7"/>
             </svg>
-            Карточка
-          </div>
-          <div
-            className={`sidebar-item ${sidebarTab === 'orders' ? 'active' : ''}`}
-            onClick={() => setSidebarTab('orders')}
-          >
-            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <rect x="2" y="3" width="12" height="10" rx="1" /><path d="M5 7h6M5 10h4" />
-            </svg>
-            Расчёты
-            {orders.length > 0 && (
-              <span className="badge badge-blue" style={{ fontSize: 10, marginLeft: 'auto' }}>
-                {orders.length}
-              </span>
-            )}
-          </div>
+            Вернуться к клиентам
+          </button>
 
-          <div className="sidebar-section" style={{ marginTop: 16 }}>Статус</div>
-          <div style={{ padding: '8px 12px' }}>
-            {orders.length > 0 ? (
-              <span className={`badge ${STATUS_BADGE[orders[0].status] ?? 'badge-blue'}`} style={{ fontSize: 11 }}>
-                <span className="status-dot" style={{ background: STATUS_DOT[orders[0].status] ?? 'var(--info)' }} />
-                {STATUS_LABELS[orders[0].status]}
-              </span>
+          {/* Секция статусов */}
+          <div className="sidebar-section">Статусы заказов</div>
+          
+          <div className="sidebar-orders-list">
+            {sortedOrders.length === 0 ? (
+              <div className="sidebar-empty">
+                <span style={{ fontSize: 18, opacity: 0.4 }}>📋</span>
+                <span style={{ fontSize: 11, color: 'var(--text-dim)' }}>Нет заказов</span>
+              </div>
             ) : (
-              <span className="badge badge-blue" style={{ fontSize: 11 }}>
-                <span className="status-dot" style={{ background: 'var(--info)' }} />
-                Новый
-              </span>
+              sortedOrders.map((order, idx) => {
+                const typeInfo = CALC_TYPE_LABELS[order.calc_type];
+                return (
+                  <div
+                    key={order.id}
+                    className="sidebar-order-item sidebar-order-item--static sidebar-order-item--compact"
+                  >
+                    <div className="sidebar-order-item__left">
+                      <span className="sidebar-order-item__icon">{typeInfo.icon}</span>
+                      <span className="sidebar-order-item__number">№{idx + 1}</span>
+                    </div>
+                    {/* Статус с текстом */}
+                    <span className={`badge ${STATUS_BADGE[order.status] ?? 'badge-blue'} sidebar-order-item__badge`}>
+                      <span className="status-dot" style={{ background: STATUS_DOT[order.status] ?? 'var(--info)' }} />
+                      {STATUS_LABELS[order.status]}
+                    </span>
+                  </div>
+                );
+              })
             )}
           </div>
         </div>
@@ -165,231 +176,161 @@ export default function ClientCardPage() {
             <span>{fullName}</span>
           </div>
 
-          {sidebarTab === 'card' ? (
-            <>
-              {/* Client header */}
-              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 16 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                  <div style={{
-                    width: 52, height: 52, borderRadius: '50%',
-                    background: 'linear-gradient(135deg,var(--accent),var(--accent-2))',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontFamily: 'var(--font-display)', fontSize: 22, color: '#0E1117',
-                  }}>
-                    {initials}
-                  </div>
-                  <div>
-                    <div style={{ fontFamily: 'var(--font-display)', fontSize: 20, letterSpacing: '.03em' }}>
-                      {fullName}
-                    </div>
-                    <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                      {client.phone} {client.email && <> &nbsp;·&nbsp; {client.email}</>}
-                    </div>
-                  </div>
-                </div>
-                {isEditing ? (
-                  <div style={{ display: 'flex', gap: 8 }}>
-                    <button
-                      className="btn btn-ghost btn-sm"
-                      onClick={() => {
-                        setEditForm({
-                          last_name: client.last_name ?? '',
-                          first_name: client.first_name ?? '',
-                          middle_name: client.middle_name ?? '',
-                          phone: client.phone ?? '',
-                          email: client.email ?? '',
-                        });
-                        setIsEditing(false);
-                      }}
-                    >
-                      Отмена
-                    </button>
-                    <button className="btn btn-primary btn-sm" onClick={saveClient} disabled={saving}>
-                      {saving ? 'Сохранение...' : 'Сохранить'}
-                    </button>
-                  </div>
-                ) : (
-                  <button className="btn btn-ghost btn-sm" onClick={() => setIsEditing(true)}>
-                    ✎ Редактировать
-                  </button>
-                )}
+          {/* Client header */}
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+              <div style={{
+                width: 52, height: 52, borderRadius: '50%',
+                background: 'linear-gradient(135deg,var(--accent),var(--accent-2))',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontFamily: 'var(--font-display)', fontSize: 22, color: '#0E1117',
+              }}>
+                {initials}
               </div>
-
-              <div className="client-info-block">
-                <div className="cib-item">
-                  <div className="cib-label">Телефон</div>
-                  {isEditing ? (
-                    <input
-                      className="form-input"
-                      value={editForm.phone}
-                      onChange={(e) => setEditForm((prev) => ({ ...prev, phone: e.target.value }))}
-                    />
-                  ) : (
-                    <div className="cib-val">{client.phone || '—'}</div>
-                  )}
+              <div>
+                <div style={{ fontFamily: 'var(--font-display)', fontSize: 20, letterSpacing: '.03em' }}>
+                  {fullName}
                 </div>
-                <div className="cib-item">
-                  <div className="cib-label">E-mail</div>
-                  {isEditing ? (
-                    <input
-                      className="form-input"
-                      value={editForm.email}
-                      onChange={(e) => setEditForm((prev) => ({ ...prev, email: e.target.value }))}
-                    />
-                  ) : (
-                    <div className="cib-val">{client.email || '—'}</div>
-                  )}
-                </div>
-                <div className="cib-item">
-                  <div className="cib-label">Добавлен</div>
-                  <div className="cib-val">{formatDate(client.created_at)}</div>
+                <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                  {client.phone} {client.email && <>&nbsp;·&nbsp;{client.email}</>}
                 </div>
               </div>
-
-              {isEditing && (
-                <div className="client-info-block" style={{ marginTop: -8 }}>
-                  <div className="cib-item">
-                    <div className="cib-label">Фамилия</div>
-                    <input
-                      className="form-input"
-                      value={editForm.last_name}
-                      onChange={(e) => setEditForm((prev) => ({ ...prev, last_name: e.target.value }))}
-                    />
-                  </div>
-                  <div className="cib-item">
-                    <div className="cib-label">Имя</div>
-                    <input
-                      className="form-input"
-                      value={editForm.first_name}
-                      onChange={(e) => setEditForm((prev) => ({ ...prev, first_name: e.target.value }))}
-                    />
-                  </div>
-                  <div className="cib-item">
-                    <div className="cib-label">Отчество</div>
-                    <input
-                      className="form-input"
-                      value={editForm.middle_name}
-                      onChange={(e) => setEditForm((prev) => ({ ...prev, middle_name: e.target.value }))}
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* Orders section */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                <div style={{ fontSize: 13, fontWeight: 600 }}>Расчёты клиента</div>
+            </div>
+            {isEditing ? (
+              <div style={{ display: 'flex', gap: 8 }}>
                 <button
-                  className="btn btn-primary btn-sm"
-                  onClick={() => navigate(`/clients/${id}/new-order`)}
+                  className="btn btn-ghost btn-sm"
+                  onClick={() => {
+                    setEditForm({
+                      last_name: client.last_name ?? '',
+                      first_name: client.first_name ?? '',
+                      middle_name: client.middle_name ?? '',
+                      phone: client.phone ?? '',
+                      email: client.email ?? '',
+                    });
+                    setIsEditing(false);
+                  }}
                 >
-                  + Создать расчёт
+                  Отмена
+                </button>
+                <button className="btn btn-primary btn-sm" onClick={saveClient} disabled={saving}>
+                  {saving ? 'Сохранение...' : 'Сохранить'}
                 </button>
               </div>
+            ) : (
+              <button className="btn btn-ghost btn-sm" onClick={() => setIsEditing(true)}>
+                ✎ Редактировать
+              </button>
+            )}
+          </div>
 
-              {orders.length === 0 ? (
-                <div className="empty-state" style={{ padding: '30px 20px' }}>
-                  <div className="empty-icon">📋</div>
-                  <div>Расчётов пока нет</div>
-                </div>
+          <div className="client-info-block">
+            <div className="cib-item">
+              <div className="cib-label">Телефон</div>
+              {isEditing ? (
+                <input
+                  className="form-input"
+                  value={editForm.phone}
+                  onChange={(e) => setEditForm((prev) => ({ ...prev, phone: e.target.value }))}
+                />
               ) : (
-                orders.map((order, idx) => {
-                  const typeInfo = CALC_TYPE_LABELS[order.calc_type];
-                  return (
-                    <div className="result-section" key={order.id}>
-                      <div className="result-section-header">
-                        <div className="result-section-title">
-                          {typeInfo.icon} Расчёт №{idx + 1}
-                          <span className={`badge ${STATUS_BADGE[order.status] ?? 'badge-blue'}`} style={{ fontSize: 10 }}>
-                            {STATUS_LABELS[order.status]}
-                          </span>
-                        </div>
-                        <div style={{ display: 'flex', gap: 6 }}>
-                          <button
-                            className="btn btn-ghost btn-sm"
-                            onClick={() => navigate(`/orders/${order.id}`)}
-                          >
-                            Открыть
-                          </button>
-                        </div>
-                      </div>
-                      <div className="result-section-body" style={{ padding: '12px 18px' }}>
-                        <div style={{ display: 'flex', gap: 20, fontSize: 12, color: 'var(--text-muted)' }}>
-                          <span>{typeInfo.icon} {typeInfo.label}</span>
-                          <span>📅 {formatDate(order.created_at)}</span>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })
+                <div className="cib-val">{client.phone || '—'}</div>
               )}
-            </>
+            </div>
+            <div className="cib-item">
+              <div className="cib-label">E-mail</div>
+              {isEditing ? (
+                <input
+                  className="form-input"
+                  value={editForm.email}
+                  onChange={(e) => setEditForm((prev) => ({ ...prev, email: e.target.value }))}
+                />
+              ) : (
+                <div className="cib-val">{client.email || '—'}</div>
+              )}
+            </div>
+            <div className="cib-item">
+              <div className="cib-label">Добавлен</div>
+              <div className="cib-val">{formatDate(client.created_at)}</div>
+            </div>
+          </div>
+
+          {isEditing && (
+            <div className="client-info-block" style={{ marginTop: -8 }}>
+              <div className="cib-item">
+                <div className="cib-label">Фамилия</div>
+                <input
+                  className="form-input"
+                  value={editForm.last_name}
+                  onChange={(e) => setEditForm((prev) => ({ ...prev, last_name: e.target.value }))}
+                />
+              </div>
+              <div className="cib-item">
+                <div className="cib-label">Имя</div>
+                <input
+                  className="form-input"
+                  value={editForm.first_name}
+                  onChange={(e) => setEditForm((prev) => ({ ...prev, first_name: e.target.value }))}
+                />
+              </div>
+              <div className="cib-item">
+                <div className="cib-label">Отчество</div>
+                <input
+                  className="form-input"
+                  value={editForm.middle_name}
+                  onChange={(e) => setEditForm((prev) => ({ ...prev, middle_name: e.target.value }))}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Orders section */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+            <div style={{ fontSize: 13, fontWeight: 600 }}>Расчёты клиента</div>
+            <button
+              className="btn btn-primary btn-sm"
+              onClick={() => navigate(`/clients/${id}/new-order`)}
+            >
+              + Создать расчёт
+            </button>
+          </div>
+
+          {sortedOrders.length === 0 ? (
+            <div className="empty-state" style={{ padding: '30px 20px' }}>
+              <div className="empty-icon">📋</div>
+              <div>Расчётов пока нет</div>
+            </div>
           ) : (
-            /* Orders tab */
-            <>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-                <div style={{ fontFamily: 'var(--font-display)', fontSize: 18, letterSpacing: '.03em' }}>
-                  Расчёты
-                </div>
-                <button
-                  className="btn btn-primary btn-sm"
-                  onClick={() => navigate(`/clients/${id}/new-order`)}
+            sortedOrders.map((order, idx) => {
+              const typeInfo = CALC_TYPE_LABELS[order.calc_type];
+              return (
+                <div 
+                  className="result-section result-section--clickable" 
+                  key={order.id}
+                  onClick={() => navigate(`/orders/${order.id}`)}
+                  style={{ cursor: 'pointer' }}
                 >
-                  + Создать расчёт
-                </button>
-              </div>
-              {orders.length === 0 ? (
-                <div className="empty-state">
-                  <div className="empty-icon">📋</div>
-                  <div>Расчётов пока нет</div>
+                  <div className="result-section-header">
+                    <div className="result-section-title">
+                      {typeInfo.icon} Расчёт №{idx + 1}
+                      <span className={`badge ${STATUS_BADGE[order.status] ?? 'badge-blue'}`} style={{ fontSize: 10 }}>
+                        {STATUS_LABELS[order.status]}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="result-section-body" style={{ padding: '12px 18px' }}>
+                    <div style={{ display: 'flex', gap: 20, fontSize: 12, color: 'var(--text-muted)' }}>
+                      <span>{typeInfo.icon} {typeInfo.label}</span>
+                      <span>📅 {formatDate(order.created_at)}</span>
+                    </div>
+                  </div>
                 </div>
-              ) : (
-                <div className="table-wrap">
-                  <table className="table">
-                    <thead>
-                      <tr>
-                        <th>Тип</th>
-                        <th>Статус</th>
-                        <th>Дата</th>
-                        <th></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {orders.map((order, idx) => {
-                        const typeInfo = CALC_TYPE_LABELS[order.calc_type];
-                        return (
-                          <tr key={order.id}>
-                            <td>
-                              <div style={{ fontWeight: 500 }}>{typeInfo.icon} {typeInfo.label}</div>
-                              <div style={{ fontSize: 11, color: 'var(--text-dim)' }}>Расчёт №{idx + 1}</div>
-                            </td>
-                            <td>
-                              <span className={`badge ${STATUS_BADGE[order.status] ?? 'badge-blue'}`}>
-                                <span className="status-dot" style={{ background: STATUS_DOT[order.status] ?? 'var(--info)' }} />
-                                {STATUS_LABELS[order.status]}
-                              </span>
-                            </td>
-                            <td style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                              {formatDate(order.created_at)}
-                            </td>
-                            <td>
-                              <button
-                                className="btn btn-ghost btn-sm"
-                                onClick={() => navigate(`/orders/${order.id}`)}
-                              >
-                                Открыть
-                              </button>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </>
+              );
+            })
           )}
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

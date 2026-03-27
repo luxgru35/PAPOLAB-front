@@ -3,6 +3,7 @@ import { useNavigate, useParams, Link } from 'react-router-dom';
 import { Topbar } from '../components/layout/Topbar';
 import { ordersApi } from '../api/orders';
 import type { FoundationInput, FrameInput, Order } from '../types/order';
+import { Footer } from '../components/layout/Footer';
 
 type FrameForm = {
   length: number;
@@ -309,6 +310,7 @@ export default function EditOrderPage() {
           </div>
         </div>
       </main>
+      <Footer />
     </div>
   );
 }
