@@ -1,7 +1,7 @@
 import axios, { AxiosError } from 'axios';
 import type { LoginRequest, LoginResponse, RegisterRequest, RegisterResponse } from '../types/auth';
 
-const defaultBaseURL = import.meta.env.DEV ? '' : 'http://api-gateway-main:8080';
+const defaultBaseURL = import.meta.env.DEV ? '' : 'http://139.28.222.246:80';
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL ?? defaultBaseURL,

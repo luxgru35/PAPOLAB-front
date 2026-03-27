@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const instance = axios.create({
-  baseURL: import.meta.env.DEV ? '' : 'http://api-gateway-main:8080',
+  baseURL: import.meta.env.DEV ? '' : 'http://139.28.222.246:',
 });
 
 instance.interceptors.request.use((config) => {

@@ -8,7 +8,7 @@ export default defineConfig({
     proxy: {
       // Proxy API calls to gRPC gateway during local dev
       '/api': {
-        target: 'http://localhost:8080',
+        target: 'http://139.28.222.246:80',
         changeOrigin: true,
       },
     },
