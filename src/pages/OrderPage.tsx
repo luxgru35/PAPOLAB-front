@@ -2,9 +2,12 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Topbar } from '../components/layout/Topbar';
 import { ordersApi } from '../api/orders';
+import { clientsApi } from '../api/clients';
 import { formatMinor, STATUS_LABELS, CALC_TYPE_LABELS } from '../types/order';
 import type { Order, PriceLine } from '../types/order';
 import { Footer } from '../components/layout/Footer';
+import { formatUnitRu } from '../utils/units';
+import { downloadOrderEstimateCsv } from '../utils/exportEstimate';
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
@@ -15,11 +18,11 @@ function extractFallbackLines(result: unknown, calcType: Order['calc_type']): Pr
     const r = result as Record<string, unknown>;
     const rows: Array<{ key: string; name: string; unit: string; quantity: number }> = [
       { key: 'foundation:piles', name: 'Сваи', unit: 'шт', quantity: Number(r.piles_count ?? 0) },
-      { key: 'foundation:concrete', name: 'Бетон (ростверк)', unit: 'м3', quantity: Number(r.grillage_concrete_m3 ?? 0) },
+      { key: 'foundation:concrete', name: 'Бетон (ростверк)', unit: 'м³', quantity: Number(r.grillage_concrete_m3 ?? 0) },
       { key: 'foundation:rebar14', name: 'Арматура 14 мм', unit: 'шт', quantity: Number(r.rebar_14_units ?? 0) },
       { key: 'foundation:rebar8', name: 'Арматура 8 мм', unit: 'шт', quantity: Number(r.rebar_8_units ?? 0) },
       { key: 'foundation:formwork_boards', name: 'Доски для опалубки', unit: 'шт', quantity: Number(r.formwork_boards ?? 0) },
-      { key: 'foundation:formwork_timber', name: 'Брус для опалубки', unit: 'м3', quantity: Number(r.formwork_timber_m3 ?? 0) },
+      { key: 'foundation:formwork_timber', name: 'Брус для опалубки', unit: 'м³', quantity: Number(r.formwork_timber_m3 ?? 0) },
     ];
     const mapped = rows
       .filter((line) => Number.isFinite(line.quantity) && line.quantity > 0)
@@ -50,17 +53,17 @@ function extractFallbackLines(result: unknown, calcType: Order['calc_type']): Pr
       const rows: Array<{ key: string; name: string; unit: string; quantity: number }> = [
         { key: 'frame:outer_stud_boards', name: 'Доски на внешние стойки', unit: 'шт', quantity: Number(outerWalls?.stud_boards_qty ?? 0) },
         { key: 'frame:outer_total_boards', name: 'Доски на внешние стены', unit: 'шт', quantity: Number(outerWalls?.total_boards_qty ?? 0) },
-        { key: 'frame:outer_osb', name: 'ОСБ (внешние стены)', unit: 'м2', quantity: Number(outerWalls?.osb_area_m2 ?? 0) },
-        { key: 'frame:outer_vapor', name: 'Пароизоляция (внешние стены)', unit: 'м2', quantity: Number(outerWalls?.vapor_area_m2 ?? 0) },
-        { key: 'frame:outer_wind', name: 'Ветрозащита (внешние стены)', unit: 'м2', quantity: Number(outerWalls?.wind_area_m2 ?? 0) },
-        { key: 'frame:outer_insulation', name: 'Утеплитель (внешние стены)', unit: 'м3', quantity: Number(outerWalls?.insulation_volume_m3 ?? 0) },
-        { key: 'frame:inner_boards_volume', name: 'Доски на внутренние стены', unit: 'м3', quantity: Number(innerWalls?.boards_volume_m3 ?? 0) },
-        { key: 'frame:inner_osb', name: 'ОСБ (внутренние стены)', unit: 'м2', quantity: Number(innerWalls?.osb_area_m2 ?? 0) },
-        { key: 'frame:beams_volume', name: 'Балки на перекрытия', unit: 'м3', quantity: Number(overlaps?.beams_volume_m3 ?? 0) },
-        { key: 'frame:overlap_osb', name: 'ОСБ (перекрытия)', unit: 'м2', quantity: Number(overlaps?.osb_area_m2 ?? 0) },
-        { key: 'frame:overlap_vapor', name: 'Пароизоляция (перекрытия)', unit: 'м2', quantity: Number(overlaps?.vapor_area_m2 ?? 0) },
-        { key: 'frame:overlap_wind', name: 'Ветрозащита (перекрытия)', unit: 'м2', quantity: Number(overlaps?.wind_area_m2 ?? 0) },
-        { key: 'frame:overlap_insulation', name: 'Утеплитель (перекрытия)', unit: 'м3', quantity: Number(overlaps?.insulation_volume_m3 ?? 0) },
+        { key: 'frame:outer_osb', name: 'ОСБ (внешние стены)', unit: 'м²', quantity: Number(outerWalls?.osb_area_m2 ?? 0) },
+        { key: 'frame:outer_vapor', name: 'Пароизоляция (внешние стены)', unit: 'м²', quantity: Number(outerWalls?.vapor_area_m2 ?? 0) },
+        { key: 'frame:outer_wind', name: 'Ветрозащита (внешние стены)', unit: 'м²', quantity: Number(outerWalls?.wind_area_m2 ?? 0) },
+        { key: 'frame:outer_insulation', name: 'Утеплитель (внешние стены)', unit: 'м³', quantity: Number(outerWalls?.insulation_volume_m3 ?? 0) },
+        { key: 'frame:inner_boards_volume', name: 'Доски на внутренние стены', unit: 'м³', quantity: Number(innerWalls?.boards_volume_m3 ?? 0) },
+        { key: 'frame:inner_osb', name: 'ОСБ (внутренние стены)', unit: 'м²', quantity: Number(innerWalls?.osb_area_m2 ?? 0) },
+        { key: 'frame:beams_volume', name: 'Балки на перекрытия', unit: 'м³', quantity: Number(overlaps?.beams_volume_m3 ?? 0) },
+        { key: 'frame:overlap_osb', name: 'ОСБ (перекрытия)', unit: 'м²', quantity: Number(overlaps?.osb_area_m2 ?? 0) },
+        { key: 'frame:overlap_vapor', name: 'Пароизоляция (перекрытия)', unit: 'м²', quantity: Number(overlaps?.vapor_area_m2 ?? 0) },
+        { key: 'frame:overlap_wind', name: 'Ветрозащита (перекрытия)', unit: 'м²', quantity: Number(overlaps?.wind_area_m2 ?? 0) },
+        { key: 'frame:overlap_insulation', name: 'Утеплитель (перекрытия)', unit: 'м³', quantity: Number(overlaps?.insulation_volume_m3 ?? 0) },
       ];
 
       const mapped = rows
@@ -89,7 +92,7 @@ function extractFallbackLines(result: unknown, calcType: Order['calc_type']): Pr
         const it = item as Record<string, unknown>;
         const name = String(it.name ?? it.title ?? it.key ?? `Материал ${idx + 1}`);
         const quantity = Number(it.quantity ?? it.qty ?? 0);
-        const unit = String(it.unit ?? 'шт');
+        const unit = formatUnitRu(String(it.unit ?? 'шт'));
         const totalMinor = Number(it.total_minor ?? it.total ?? 0);
         return {
           key: String(it.key ?? `${key}-${idx}`),
@@ -131,6 +134,7 @@ export default function OrderPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [order, setOrder] = useState<Order | null>(null);
+  const [clientEmail, setClientEmail] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [statusLoading, setStatusLoading] = useState(false);
@@ -140,6 +144,14 @@ export default function OrderPage() {
     try {
       const data = await ordersApi.get(id);
       setOrder(data);
+      setClientEmail(null);
+      try {
+        const card = await clientsApi.getCard(data.client_id);
+        const em = card.client?.email;
+        setClientEmail(em && String(em).trim() ? String(em).trim() : null);
+      } catch {
+        // в экспорте останется client_id
+      }
     } catch {
       setError('Не удалось загрузить расчёт');
     } finally {
@@ -275,7 +287,13 @@ export default function OrderPage() {
               <button className="btn btn-ghost btn-sm" onClick={() => navigate(`/orders/${order.id}/edit`)}>
                 ✎ Редактировать
               </button>
-              <button className="btn btn-ghost btn-sm">📄 Экспорт</button>
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm"
+                onClick={() => downloadOrderEstimateCsv(order, lines, { clientEmail })}
+              >
+                📄 Экспорт
+              </button>
             </div>
           </div>
 
@@ -297,7 +315,7 @@ export default function OrderPage() {
                       <div className="stat-row" key={line.key}>
                         <span className="stat-key">{line.name}</span>
                         <span className="stat-val">
-                          {line.quantity} {line.unit}
+                          {line.quantity} {formatUnitRu(line.unit)}
                           {line.total_minor > 0 && (
                             <span style={{ color: 'var(--text-muted)', fontWeight: 400, marginLeft: 8, fontSize: 12 }}>
                               {formatMinor(line.total_minor)}

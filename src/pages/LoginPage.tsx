@@ -25,7 +25,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="auth-root">
+    <div className="auth-root auth-root--login">
       <div className="auth-card">
 
         {/* ── Left: form ── */}
@@ -90,6 +90,7 @@ export default function LoginPage() {
 
         {/* ── Right: illustration ── */}
         <div className="panel-right" aria-hidden="true">
+          <div className="panel-right__photo panel-right__photo--login" />
           <div className="grid-bg" />
           <div className="float-card float-card--tl">
             <div className="float-card__label">Фундамент</div>
