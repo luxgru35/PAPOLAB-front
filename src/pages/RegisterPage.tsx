@@ -34,7 +34,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="auth-root">
+    <div className="auth-root auth-root--register">
       <div className="auth-card">
 
         {/* ── Left: form ── */}
@@ -111,23 +111,24 @@ export default function RegisterPage() {
 
         {/* ── Right: illustration ── */}
         <div className="panel-right" aria-hidden="true">
+          <div className="panel-right__photo panel-right__photo--register" />
           <div className="grid-bg" />
-          <div className="float-card float-card--tl">
-            <div className="float-card__label">Фундамент</div>
-            <div className="float-card__value">284 500 ₽</div>
-            <div className="float-card__status float-card__status--success">↑ Актуален</div>
+          <div className="float-card float-card--tl float-card--register-tl">
+            <div className="float-card__label">Личный кабинет</div>
+            <div className="float-card__value">Доступ</div>
+            <div className="float-card__status float-card__status--success">Сразу после входа</div>
           </div>
-          <div className="float-card float-card--tr">
-            <div className="float-card__label">Каркас</div>
-            <div className="float-card__value">1 340 000 ₽</div>
+          <div className="float-card float-card--tr float-card--register-tr">
+            <div className="float-card__label">Сметы и клиенты</div>
+            <div className="float-card__value">В облаке</div>
           </div>
-          <div className="float-card float-card--ml">
-            <div className="float-card__label">Кровля</div>
-            <div className="float-card__value">512 000 ₽</div>
-            <div className="float-card__status float-card__status--warning">→ Пересчитать</div>
+          <div className="float-card float-card--ml float-card--register-ml">
+            <div className="float-card__label">Аккаунт</div>
+            <div className="float-card__value">Защищён</div>
+            <div className="float-card__status float-card__status--warning">Только вы</div>
           </div>
-          <div className="big-text big-text--dim">СТРОИМ</div>
-          <div className="big-text big-text--accent">ТОЧНЕЕ</div>
+          <div className="big-text big-text--dim big-text--register-dim">СЧИТАЕМ</div>
+          <div className="big-text big-text--accent big-text--register-accent">ВМЕСТЕ</div>
           <p className="panel-footer">ООО «Строительная компания» · Ульяновская область</p>
         </div>
 
