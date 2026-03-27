@@ -27,7 +27,7 @@ export default function ClientsPage() {
       setLoading(true);
       setError(null);
       const data = await clientsApi.list();
-      setClients(data);
+      setClients(Array.isArray(data) ? data : []);
     } catch {
       setError('Не удалось загрузить клиентов');
     } finally {
@@ -49,7 +49,7 @@ export default function ClientsPage() {
 
       cards.forEach((card) => {
         if (card.status !== 'fulfilled') return;
-        card.value.orders.forEach((order) => {
+        (card.value.orders ?? []).forEach((order) => {
           if (order.status === 'accepted') accepted += 1;
           if (order.status === 'delivered') delivered += 1;
         });
