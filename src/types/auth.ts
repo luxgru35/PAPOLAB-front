@@ -25,6 +25,7 @@ export interface RegisterResponse {
 export interface AuthState {
   token: string | null;
   displayName: string | null;
+  email: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;

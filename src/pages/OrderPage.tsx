@@ -4,6 +4,7 @@ import { Topbar } from '../components/layout/Topbar';
 import { ordersApi } from '../api/orders';
 import { formatMinor, STATUS_LABELS, CALC_TYPE_LABELS } from '../types/order';
 import type { Order, PriceLine } from '../types/order';
+import { Footer } from '../components/layout/Footer';
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
@@ -20,7 +21,6 @@ function extractFallbackLines(result: unknown, calcType: Order['calc_type']): Pr
       { key: 'foundation:formwork_boards', name: 'Доски для опалубки', unit: 'шт', quantity: Number(r.formwork_boards ?? 0) },
       { key: 'foundation:formwork_timber', name: 'Брус для опалубки', unit: 'м3', quantity: Number(r.formwork_timber_m3 ?? 0) },
     ];
-
     const mapped = rows
       .filter((line) => Number.isFinite(line.quantity) && line.quantity > 0)
       .map((line) => ({
@@ -34,7 +34,6 @@ function extractFallbackLines(result: unknown, calcType: Order['calc_type']): Pr
 
     if (mapped.length > 0) return mapped;
   }
-
   if (calcType === 'frame' && result && typeof result === 'object') {
     const rec = result as Record<string, unknown>;
     const totals = (rec.totals && typeof rec.totals === 'object') ? (rec.totals as Record<string, unknown>) : null;
@@ -47,7 +46,6 @@ function extractFallbackLines(result: unknown, calcType: Order['calc_type']): Pr
     const overlaps = totals?.overlaps && typeof totals.overlaps === 'object'
       ? (totals.overlaps as Record<string, unknown>)
       : null;
-
     if (outerWalls || innerWalls || overlaps) {
       const rows: Array<{ key: string; name: string; unit: string; quantity: number }> = [
         { key: 'frame:outer_stud_boards', name: 'Доски на внешние стойки', unit: 'шт', quantity: Number(outerWalls?.stud_boards_qty ?? 0) },
@@ -79,7 +77,6 @@ function extractFallbackLines(result: unknown, calcType: Order['calc_type']): Pr
       if (mapped.length > 0) return mapped;
     }
   }
-
   if (!result || typeof result !== 'object') return [];
   const rec = result as Record<string, unknown>;
   const candidates = ['materials', 'items', 'lines', 'breakdown'];
@@ -113,6 +110,7 @@ const STATUS_BADGE: Record<string, string> = {
   in_progress: 'badge-yellow',
   delivered: 'badge-blue',
 };
+
 const STATUS_DOT: Record<string, string> = {
   accepted: 'var(--success)',
   in_progress: 'var(--warning)',
@@ -123,6 +121,7 @@ const NEXT_STATUS: Record<string, string> = {
   accepted: 'in_progress',
   in_progress: 'delivered',
 };
+
 const NEXT_STATUS_LABEL: Record<string, string> = {
   accepted: 'Взять в работу',
   in_progress: 'Заключить договор',
@@ -173,6 +172,7 @@ export default function OrderPage() {
           <div className="empty-icon">⏳</div>
           <div>Загрузка расчёта...</div>
         </div>
+        <Footer />
       </div>
     );
   }
@@ -183,9 +183,12 @@ export default function OrderPage() {
         <Topbar />
         <div className="empty-state" style={{ marginTop: 60 }}>
           <div className="empty-icon">⚠️</div>
-          <div>{error ?? 'Расчёт не найден'}</div>
-          <button className="btn btn-ghost" style={{ marginTop: 16 }} onClick={() => navigate(-1)}>← Назад</button>
+          <div style={{ marginBottom: 12 }}>{error ?? 'Расчёт не найден'}</div>
+          <button className="btn btn-ghost" style={{ marginTop: 16 }} onClick={() => navigate(-1)}>
+            ← Назад
+          </button>
         </div>
+        <Footer />
       </div>
     );
   }
@@ -207,18 +210,21 @@ export default function OrderPage() {
       <div className="layout-with-sidebar" style={{ flex: 1, minHeight: 'calc(100vh - 56px)' }}>
         {/* ── Sidebar ── */}
         <div className="sidebar">
-          <div className="sidebar-section">Элементы</div>
-          <div className="sidebar-item active">
-            {typeInfo.icon} {typeInfo.label}
-          </div>
+          <button 
+            className="sidebar-item sidebar-item--back" 
+            onClick={() => navigate(`/clients/${order.client_id}`)}
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+            Вернуться к расчётам
+          </button>
+
+          <div className="sidebar-section">Элемент</div>
           <div style={{ marginTop: 12, padding: '0 8px' }}>
-            <button
-              className="btn btn-ghost btn-sm"
-              style={{ width: '100%', fontSize: 11 }}
-                onClick={() => navigate(`/clients/${order.client_id}/new-order`)}
-            >
-                + Новый расчёт
-            </button>
+            <div style={{ fontSize: 13, color: 'var(--text)', fontWeight: 500 }}>
+              {typeInfo.icon} {typeInfo.label}
+            </div>
           </div>
 
           <div className="sidebar-section" style={{ marginTop: 20 }}>Статус</div>
@@ -379,6 +385,7 @@ export default function OrderPage() {
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

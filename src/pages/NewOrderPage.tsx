@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Topbar } from '../components/layout/Topbar';
 import { ordersApi } from '../api/orders';
 import type { CalcType, FrameInput, FoundationInput } from '../types/order';
+import { Footer } from '../components/layout/Footer';
 
 // ── Step types ──────────────────────────────────────
 type Step = 'select' | 'params' | 'loading';
@@ -906,6 +907,7 @@ export default function NewOrderPage() {
           </div>
         )}
       </main>
+      <Footer />
     </div>
   );
 }

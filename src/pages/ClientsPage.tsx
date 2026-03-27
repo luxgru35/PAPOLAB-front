@@ -5,6 +5,7 @@ import { CreateClientModal } from '../components/modals/CreateClientModal';
 import { clientsApi } from '../api/clients';
 import { clientFullName } from '../types/client';
 import type { Client } from '../types/client';
+import { Footer } from '../components/layout/Footer';
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('ru-RU', {
@@ -185,7 +186,7 @@ export default function ClientsPage() {
           </div>
         )}
       </main>
-
+      <Footer />
       <CreateClientModal open={modalOpen} onClose={handleClientCreated} />
     </div>
   );
