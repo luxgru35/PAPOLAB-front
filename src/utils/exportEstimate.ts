@@ -9,7 +9,7 @@ function escapeCsvCell(s: string): string {
   return s;
 }
 
-/** Число в строку для CSV (запятая как десятичный разделитель — привычнее в RU Excel). */
+
 function qtyToCsv(n: number): string {
   if (!Number.isFinite(n)) return '';
   return String(n).replace('.', ',');
@@ -21,13 +21,11 @@ function minorToRub(minor: number): string {
 }
 
 export interface EstimateExportOptions {
-  /** E-mail клиента для колонки «Клиент» (вместо нечитаемого id). */
+
   clientEmail?: string | null;
 }
 
-/**
- * Скачивает смету расчёта как CSV (UTF-8 BOM, разделитель `;`) — без бэкенда.
- */
+
 export function downloadOrderEstimateCsv(
   order: Order,
   lines: PriceLine[],

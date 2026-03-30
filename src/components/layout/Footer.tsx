@@ -9,7 +9,7 @@ export function Footer() {
           <div className="footer-block__body">
             <p>ООО «Чинилы»</p>
             <p>Самарская область</p>
-            <p>Работаем с 2010 года</p>
+            <p>Работаем с 2026 года</p>
           </div>
         </div>
 
