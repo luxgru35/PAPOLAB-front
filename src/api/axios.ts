@@ -1,9 +1,12 @@
-﻿import axios from 'axios';
+import axios from 'axios';
 
 const configuredBaseURL = String(import.meta.env.VITE_API_URL ?? '').trim();
+const isHttpsPage = typeof window !== 'undefined' && window.location.protocol === 'https:';
+const resolvedBaseURL =
+  isHttpsPage && configuredBaseURL.startsWith('http://') ? '' : configuredBaseURL;
 
 const instance = axios.create({
-  baseURL: configuredBaseURL || '',
+  baseURL: resolvedBaseURL || '',
 });
 
 instance.interceptors.request.use((config) => {

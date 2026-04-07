@@ -1,10 +1,13 @@
-﻿import axios, { AxiosError } from 'axios';
+import axios, { AxiosError } from 'axios';
 import type { LoginRequest, LoginResponse, RegisterRequest, RegisterResponse } from '../types/auth';
 
 const configuredBaseURL = String(import.meta.env.VITE_API_URL ?? '').trim();
+const isHttpsPage = typeof window !== 'undefined' && window.location.protocol === 'https:';
+const resolvedBaseURL =
+  isHttpsPage && configuredBaseURL.startsWith('http://') ? '' : configuredBaseURL;
 
 const api = axios.create({
-  baseURL: configuredBaseURL || '',
+  baseURL: resolvedBaseURL || '',
   headers: { 'Content-Type': 'application/json' },
   timeout: 10_000,
 });
