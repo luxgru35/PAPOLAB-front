@@ -1,7 +1,9 @@
-import axios from 'axios';
+﻿import axios from 'axios';
+
+const configuredBaseURL = String(import.meta.env.VITE_API_URL ?? '').trim();
 
 const instance = axios.create({
-  baseURL: import.meta.env.DEV ? '' : 'http://139.28.222.246:',
+  baseURL: configuredBaseURL || '',
 });
 
 instance.interceptors.request.use((config) => {
@@ -31,3 +33,4 @@ instance.interceptors.response.use(
 );
 
 export default instance;
+

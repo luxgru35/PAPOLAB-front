@@ -1,22 +1,20 @@
-import axios, { AxiosError } from 'axios';
+﻿import axios, { AxiosError } from 'axios';
 import type { LoginRequest, LoginResponse, RegisterRequest, RegisterResponse } from '../types/auth';
 
-const defaultBaseURL = import.meta.env.DEV ? '' : 'http://139.28.222.246:80';
+const configuredBaseURL = String(import.meta.env.VITE_API_URL ?? '').trim();
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL ?? defaultBaseURL,
+  baseURL: configuredBaseURL || '',
   headers: { 'Content-Type': 'application/json' },
   timeout: 10_000,
 });
 
-// Attach JWT to every request if present
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('auth_token');
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
 
-// ── Helpers ───────────────────────────────────────────────────────────
 function handleAxiosError(err: unknown): never {
   const error = err as AxiosError<{ message?: string }>;
 
@@ -25,26 +23,21 @@ function handleAxiosError(err: unknown): never {
     const message = error.response.data?.message;
 
     if (status === 401 || status === 403) {
-      throw new Error('Неверный email или пароль');
+      throw new Error('Invalid email or password');
     }
     if (status === 409) {
-      throw new Error('Пользователь с таким email уже существует');
+      throw new Error('User with this email already exists');
     }
-    throw new Error(message ?? `Ошибка сервера (${status})`);
+    throw new Error(message ?? `Server error (${status})`);
   }
 
   if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
-    throw new Error('Сервер не отвечает. Проверьте соединение');
+    throw new Error('Server is not responding. Check your connection');
   }
 
-  throw new Error('Не удалось подключиться к серверу');
+  throw new Error('Could not connect to server');
 }
 
-// ── Login ─────────────────────────────────────────────────────────────
-/**
- * POST /api/auth/login
- * API gateway: { email, password } → { access_token, refresh_token }
- */
 export async function loginRequest(body: LoginRequest): Promise<LoginResponse> {
   try {
     const { data } = await api.post<LoginResponse>('/api/auth/login', body);
@@ -54,14 +47,6 @@ export async function loginRequest(body: LoginRequest): Promise<LoginResponse> {
   }
 }
 
-// ── Register ──────────────────────────────────────────────────────────
-/**
- * POST /api/auth/register
- * gRPC: Auth.Register(email, password) → user_id
- *
- * Backend returns user_id, NOT a token.
- * After successful registration, redirect to /login.
- */
 export async function registerRequest(
   body: Omit<RegisterRequest, 'confirmPassword'>
 ): Promise<RegisterResponse> {
